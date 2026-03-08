@@ -1027,7 +1027,8 @@ select{background:var(--bg-raised);border:1px solid var(--border);color:var(--te
 </style>
 <!-- Firebase SDK -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAnalytics }     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
          signOut, onAuthStateChanged, updateProfile }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -1036,17 +1037,19 @@ import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp }
 
 // ── Firebase config (your project) ──
 const firebaseConfig = {
-  apiKey:            "AIzaSyDemo_ReplaceWithYourKey",
-  authDomain:        "gigo-beatmaker.firebaseapp.com",
-  projectId:         "gigo-beatmaker",
-  storageBucket:     "gigo-beatmaker.appspot.com",
-  messagingSenderId: "000000000000",
-  appId:             "1:000000000000:web:0000000000000000"
+  apiKey:            "AIzaSyBeZmUrdtc3SlKlQVeB90zZxbr0UUi9KEY",
+  authDomain:        "gigopamba-cce56.firebaseapp.com",
+  projectId:         "gigopamba-cce56",
+  storageBucket:     "gigopamba-cce56.firebasestorage.app",
+  messagingSenderId: "866955089518",
+  appId:             "1:866955089518:web:ddd7d75a2bcab17767b87f",
+  measurementId:     "G-ZB7EN8BT63"
 };
 
-const fbApp  = initializeApp(firebaseConfig);
-const fbAuth = getAuth(fbApp);
-const fbDB   = getFirestore(fbApp);
+const fbApp      = initializeApp(firebaseConfig);
+const fbAuth     = getAuth(fbApp);
+const fbDB       = getFirestore(fbApp);
+const fbAnalytics = getAnalytics(fbApp);
 
 // Expose to global scope so the rest of the app can use them
 window.fbAuth = fbAuth;
@@ -1714,7 +1717,7 @@ onAuthStateChanged(fbAuth, async (firebaseUser) => {
     <div style="text-align:center;margin-bottom:20px">
       <div style="font-size:2.8rem;filter:drop-shadow(0 0 14px #9F00FF)">🔒</div>
       <h2 style="margin:8px 0 4px;font-family:var(--font-display);font-size:1.25rem;letter-spacing:.06em;color:#fff">UNLOCK EXPORT</h2>
-      <p style="color:var(--text-muted);font-size:.78rem;margin:0;line-height:1.5">Your first <strong style="color:#00ff88">24 hours are FREE</strong>.<br>After that, just <strong style="color:var(--purple-bright)">$1 / day</strong> to keep exporting.</p>
+      <p style="color:var(--text-muted);font-size:.78rem;margin:0;line-height:1.5">Your first <strong style="color:#00ff88">24 hours are FREE</strong>.<br>After that, just <strong style="color:var(--purple-bright)">$1 / week</strong> to keep exporting.</p>
     </div>
 
     <!-- Feature list -->
@@ -1736,7 +1739,7 @@ onAuthStateChanged(fbAuth, async (firebaseUser) => {
     <!-- Price -->
     <div style="text-align:center;margin-bottom:18px;padding:12px;background:rgba(0,0,0,.25);border-radius:8px">
       <span style="font-family:var(--font-display);font-size:2.4rem;font-weight:900;color:var(--purple-bright);text-shadow:0 0 24px rgba(159,0,255,.7)">$1</span>
-      <span style="font-size:.85rem;color:var(--text-muted)"> / day &nbsp;·&nbsp; </span>
+      <span style="font-size:.85rem;color:var(--text-muted)"> / week &nbsp;·&nbsp; </span>
       <span style="font-size:.78rem;color:#00ff88">First 24h FREE</span>
     </div>
 
@@ -1750,11 +1753,11 @@ onAuthStateChanged(fbAuth, async (firebaseUser) => {
       onmouseout="this.style.transform='';this.style.boxShadow='0 4px 18px rgba(255,196,57,.35)'">
       <!-- PayPal "P" wordmark SVG -->
       <svg width="20" height="20" viewBox="0 0 24 24"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c1.379 4.275-1.376 6.53-6.088 6.53H12.32c-.524 0-.968.382-1.05.9l-1.45 9.21c-.08.51.28.98.794.98h3.593c.458 0 .849-.333.92-.785l.038-.196.733-4.647.047-.256a.932.932 0 0 1 .92-.785h.579c3.754 0 6.693-1.525 7.552-5.935.36-1.845.173-3.386-.774-4.476z" fill="#003087"/></svg>
-      Pay $1 with PayPal
+      Pay $1 / week with PayPal
     </button>
 
     <p style="text-align:center;font-size:.68rem;color:var(--text-muted);margin:10px 0 0;line-height:1.6">
-      Secure payment via PayPal &nbsp;·&nbsp; No subscription &nbsp;·&nbsp; Pay only when you need it
+      Secure · $1 unlocks full export for 7 days &nbsp;·&nbsp; Cancel anytime
     </p>
 
     <div style="text-align:center;margin-top:10px">
@@ -4878,6 +4881,11 @@ function hoursUntilPaywall(){
   if(!currentUser?.createdAt) return 0;
   return Math.max(0, 24-(Date.now()-currentUser.createdAt)/(1000*60*60));
 }
+function daysUntilExpiry(){
+  const exp = getPaymentExpiry();
+  if(!exp) return 0;
+  return Math.max(0, Math.ceil((exp - Date.now())/(1000*60*60*24)));
+}
 
 // ── Firebase sign-in wrappers ──
 async function fbSignIn(email, password){
@@ -5020,7 +5028,8 @@ function updateLoginButton(){
     loginBtn.style.background='rgba(100,100,100,.2)';
   } else {
     const h = hoursUntilPaywall();
-    const tag = h>0 ? ` ⏱ ${Math.ceil(h)}h free` : isPaid() ? ' ✅' : ' 🔒';
+    const d = daysUntilExpiry();
+    const tag = h>0 ? ` ⏱ ${Math.ceil(h)}h free` : d>0 ? ` ✅ ${d}d left` : isPaid() ? ' ✅' : ' 🔒';
     loginBtn.textContent = '👤 '+currentUser.name+tag;
     loginBtn.style.background='rgba(159,0,255,.3)';
   }
@@ -5101,11 +5110,11 @@ function openPayPalPayment(){
 }
 
 function handlePaymentComplete(){
-  // Grant 24h from now
-  const expiry = Date.now() + 24*60*60*1000;
+  // Grant 7 days from now
+  const expiry = Date.now() + 7*24*60*60*1000;
   setPaymentExpiry(expiry);
   paywallModal.classList.remove('open');
-  showToast('✅ Payment received! Export unlocked for 24 hours 🎉');
+  showToast('✅ Payment received! Export unlocked for 7 days 🎉');
   updateLoginButton();
   checkPaymentStatus();
   // Resume the export they were trying to do
@@ -7296,4 +7305,4 @@ async function addGuitarToSequencer(recOrIdx){
 </div>
 
 </body>
-</html
+</html>
