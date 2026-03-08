@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -244,6 +245,8 @@ input[type='range']::-moz-range-thumb{width:12px;height:12px;border-radius:50%;b
   color:var(--text-muted);font-size:.48rem;font-weight:700;cursor:pointer;font-family:var(--font-display);transition:all .15s;padding:0;display:flex;align-items:center;justify-content:center}
 .mbtn:hover{border-color:#FF4444;color:#FF4444}.mbtn.active{background:rgba(255,60,60,.28);border-color:#FF4444;color:#FF4444}
 .sbtn:hover{border-color:#FFAA00;color:#FFAA00}.sbtn.active{background:rgba(255,170,0,.28);border-color:#FFAA00;color:#FFAA00}
+.xbtn{width:16px;height:16px;border-radius:3px;background:transparent;border:1px solid transparent;color:var(--text-muted);font-size:.52rem;cursor:pointer;transition:all .15s;padding:0;display:flex;align-items:center;justify-content:center}
+.xbtn:hover{border-color:#FF4444;color:#FF4444;background:rgba(255,60,60,.18)}
 .upload-btn{width:16px;height:16px;border-radius:2px;border:1px solid var(--border);background:var(--bg-raised);
   color:var(--text-secondary);font-size:.58rem;cursor:pointer;transition:all .15s;padding:0;display:flex;align-items:center;justify-content:center}
 .upload-btn:hover{background:var(--bg-hover);border-color:var(--border-active)}
@@ -1022,6 +1025,71 @@ select{background:var(--bg-raised);border:1px solid var(--border);color:var(--te
   .brand-text p{display:none}
 }
 </style>
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+         signOut, onAuthStateChanged, updateProfile }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ── Firebase config (your project) ──
+const firebaseConfig = {
+  apiKey:            "AIzaSyDemo_ReplaceWithYourKey",
+  authDomain:        "gigo-beatmaker.firebaseapp.com",
+  projectId:         "gigo-beatmaker",
+  storageBucket:     "gigo-beatmaker.appspot.com",
+  messagingSenderId: "000000000000",
+  appId:             "1:000000000000:web:0000000000000000"
+};
+
+const fbApp  = initializeApp(firebaseConfig);
+const fbAuth = getAuth(fbApp);
+const fbDB   = getFirestore(fbApp);
+
+// Expose to global scope so the rest of the app can use them
+window.fbAuth = fbAuth;
+window.fbDB   = fbDB;
+window.fbFns  = {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  updateProfile,
+  doc, setDoc, getDoc, updateDoc, serverTimestamp
+};
+
+// ── Auth state listener ──
+onAuthStateChanged(fbAuth, async (firebaseUser) => {
+  if(firebaseUser){
+    // Fetch or create user profile in Firestore
+    const uRef  = doc(fbDB, 'users', firebaseUser.uid);
+    let snap;
+    try { snap = await getDoc(uRef); } catch(e){ snap = {exists:()=>false}; }
+    let profile;
+    if(snap.exists()){
+      profile = snap.data();
+    } else {
+      profile = {
+        name:      firebaseUser.displayName || firebaseUser.email.split('@')[0],
+        email:     firebaseUser.email,
+        role:      'user',
+        createdAt: Date.now(),
+        plan:      'free'
+      };
+      try{ await setDoc(uRef, { ...profile, lastSeen: serverTimestamp() }); }catch(e){}
+    }
+    // Update lastSeen
+    try{ await updateDoc(uRef, { lastSeen: serverTimestamp() }); }catch(e){}
+
+    const user = { uid: firebaseUser.uid, ...profile };
+    if(typeof window.onFbLogin === 'function') window.onFbLogin(user);
+  } else {
+    if(typeof window.onFbLogout === 'function') window.onFbLogout();
+  }
+});
+</script>
 </head>
 <body>
 
@@ -1066,6 +1134,7 @@ select{background:var(--bg-raised);border:1px solid var(--border);color:var(--te
     <button class="btn-icon" id="btn-export" style="background:rgba(0,255,100,.12);border-color:rgba(0,255,100,.3);color:#00ff88" title="Export beat (login required)">⬇️ Export</button>
     <button class="btn-icon" id="btn-piano">🎹 Piano</button>
     <button class="btn-icon" id="btn-drums">🥁 Pads</button>
+    <button class="btn-icon" id="btn-about">👨‍💻 About</button>
     <button class="btn-icon" id="btn-help">? Help</button>
   </div>
 </header>
@@ -1122,13 +1191,17 @@ select{background:var(--bg-raised);border:1px solid var(--border);color:var(--te
 <!-- PRESETS -->
 <div class="presets-bar">
   <label>Presets:</label>
+  <button class="pbtn" data-p="Premier Style">🎚️ Premier</button>
+  <button class="pbtn" data-p="Wu-Tang Grimy">🐉 Wu-Tang</button>
+  <button class="pbtn" data-p="Pete Rock Soul">💿 Pete Rock</button>
+  <button class="pbtn" data-p="G-Funk West">🌴 G-Funk</button>
+  <button class="pbtn" data-p="Illmatic Dark">🗗 Illmatic</button>
+  <button class="pbtn" data-p="J Dilla Drunk">🎹 J Dilla</button>
+  <button class="pbtn" data-p="Timbaland Era">⚡ Timbaland</button>
+  <button class="pbtn" data-p="Harlem Hard">🔫 Harlem</button>
   <button class="pbtn" data-p="Trap Banger">🔥 Trap</button>
   <button class="pbtn" data-p="Boom Bap OG">🎧 Boom Bap</button>
   <button class="pbtn" data-p="Lofi Study">🌙 Lo-Fi</button>
-  <button class="pbtn" data-p="Drill UK">🗡️ Drill</button>
-  <button class="pbtn" data-p="Phonk Dark">💀 Phonk</button>
-  <button class="pbtn" data-p="House Groove">🏠 House</button>
-  <button class="pbtn" data-p="Future Bass">🌊 Future</button>
   <button class="pbtn" data-p="Afrobeats">🌍 Afro</button>
   <div class="pat-group">
     <span>PAT</span>
@@ -1144,6 +1217,7 @@ select{background:var(--bg-raised);border:1px solid var(--border);color:var(--te
   <button class="mode-tab" data-tab="piano">🎹 PIANO</button>
   <button class="mode-tab" data-tab="drums">🎤 DRUM PADS</button>
   <button class="mode-tab" data-tab="guitar">🎸 GUITAR</button>
+  <button class="mode-tab" data-tab="vocal">🎤 VOCAL TUNE</button>
 </div>
 
 <!-- APP BODY -->
@@ -1368,6 +1442,122 @@ select{background:var(--bg-raised);border:1px solid var(--border);color:var(--te
     </div>
   </div>
 
+  <!-- ════════════════════ VOCAL TUNE VIEW ════════════════════ -->
+  <div id="view-vocal" style="display:none;flex:1;flex-direction:column;overflow:hidden;padding:14px 18px;gap:14px">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-family:var(--font-display);font-size:.65rem;color:var(--purple-bright);letter-spacing:.15em;margin-bottom:2px">🎤 VOCAL TUNE STUDIO</div>
+        <div style="font-size:.7rem;color:var(--text-muted)">Record your voice · Shape the tone · Drop it in your beat</div>
+      </div>
+      <div id="vt-status-dot" style="width:10px;height:10px;border-radius:50%;background:#333;transition:all .3s"></div>
+    </div>
+
+    <!-- Two column layout -->
+    <div style="display:flex;gap:14px;flex:1;overflow:hidden;flex-wrap:wrap">
+
+      <!-- LEFT: Record + Controls -->
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:240px;flex:1">
+
+        <!-- Big record button -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px;background:rgba(159,0,255,.06);border:1px solid rgba(159,0,255,.15);border-radius:12px;padding:18px 14px">
+          <button id="vt-record-btn" style="width:72px;height:72px;border-radius:50%;background:rgba(255,40,40,.18);border:2px solid rgba(255,40,40,.5);color:#ff4444;font-size:1.6rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center">⏺</button>
+          <div id="vt-record-lbl" style="font-family:var(--font-display);font-size:.62rem;letter-spacing:.12em;color:var(--text-muted)">TAP TO RECORD</div>
+          <div id="vt-timer" style="font-family:var(--font-display);font-size:1.1rem;font-weight:900;color:var(--purple-bright);display:none">0:00</div>
+          <!-- Waveform visualizer -->
+          <canvas id="vt-canvas" width="200" height="40" style="border-radius:6px;background:rgba(0,0,0,.3);width:100%;max-width:220px"></canvas>
+        </div>
+
+        <!-- Pitch / Key controls -->
+        <div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:10px;padding:12px 14px">
+          <div style="font-family:var(--font-display);font-size:.52rem;color:var(--text-muted);letter-spacing:.12em;margin-bottom:10px">🎼 PITCH &amp; KEY</div>
+          <label style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:.72rem;color:var(--text-secondary)">Pitch Shift</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="range" id="vt-pitch" min="-12" max="12" step="1" value="0"
+                style="width:110px;accent-color:var(--purple-bright)">
+              <span id="vt-pitch-lbl" style="font-family:var(--font-display);font-size:.72rem;color:var(--purple-bright);min-width:28px">0st</span>
+            </div>
+          </label>
+          <label style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:.72rem;color:var(--text-secondary)">Fine Tune</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="range" id="vt-fine" min="-50" max="50" step="1" value="0"
+                style="width:110px;accent-color:var(--purple-bright)">
+              <span id="vt-fine-lbl" style="font-family:var(--font-display);font-size:.72rem;color:var(--purple-bright);min-width:32px">+0¢</span>
+            </div>
+          </label>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Voice Shape + Processing -->
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:240px;flex:1">
+
+        <!-- Voice Character presets -->
+        <div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:10px;padding:12px 14px">
+          <div style="font-family:var(--font-display);font-size:.52rem;color:var(--text-muted);letter-spacing:.12em;margin-bottom:10px">🎭 VOICE CHARACTER</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" id="vt-char-grid">
+            <button class="vt-char-btn active" data-char="natural"   style="padding:8px 6px;border-radius:7px;background:rgba(159,0,255,.18);border:1px solid var(--purple-bright);color:#fff;font-size:.7rem;cursor:pointer;transition:all .15s">🎤 Natural</button>
+            <button class="vt-char-btn"        data-char="clean"     style="padding:8px 6px;border-radius:7px;background:var(--bg-deeper);border:1px solid var(--border);color:var(--text-muted);font-size:.7rem;cursor:pointer;transition:all .15s">✨ Clean</button>
+            <button class="vt-char-btn"        data-char="deep"      style="padding:8px 6px;border-radius:7px;background:var(--bg-deeper);border:1px solid var(--border);color:var(--text-muted);font-size:.7rem;cursor:pointer;transition:all .15s">🔊 Deep</button>
+            <button class="vt-char-btn"        data-char="bright"    style="padding:8px 6px;border-radius:7px;background:var(--bg-deeper);border:1px solid var(--border);color:var(--text-muted);font-size:.7rem;cursor:pointer;transition:all .15s">⚡ Bright</button>
+            <button class="vt-char-btn"        data-char="robot"     style="padding:8px 6px;border-radius:7px;background:var(--bg-deeper);border:1px solid var(--border);color:var(--text-muted);font-size:.7rem;cursor:pointer;transition:all .15s">🤖 Robot</button>
+            <button class="vt-char-btn"        data-char="whisper"   style="padding:8px 6px;border-radius:7px;background:var(--bg-deeper);border:1px solid var(--border);color:var(--text-muted);font-size:.7rem;cursor:pointer;transition:all .15s">🌬 Whisper</button>
+            <button class="vt-char-btn"        data-char="telephone" style="padding:8px 6px;border-radius:7px;background:var(--bg-deeper);border:1px solid var(--border);color:var(--text-muted);font-size:.7rem;cursor:pointer;transition:all .15s">📞 Phone</button>
+            <button class="vt-char-btn"        data-char="megaphone" style="padding:8px 6px;border-radius:7px;background:var(--bg-deeper);border:1px solid var(--border);color:var(--text-muted);font-size:.7rem;cursor:pointer;transition:all .15s">📣 Mega</button>
+          </div>
+        </div>
+
+        <!-- EQ + Reverb -->
+        <div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:10px;padding:12px 14px">
+          <div style="font-family:var(--font-display);font-size:.52rem;color:var(--text-muted);letter-spacing:.12em;margin-bottom:10px">🎛 POLISH</div>
+          <label style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:.72rem;color:var(--text-secondary)">Reverb</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="range" id="vt-reverb" min="0" max="100" value="20"
+                style="width:110px;accent-color:var(--purple-bright)">
+              <span id="vt-reverb-lbl" style="font-family:var(--font-display);font-size:.72rem;color:var(--purple-bright);min-width:32px">20%</span>
+            </div>
+          </label>
+          <label style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:.72rem;color:var(--text-secondary)">Warmth</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="range" id="vt-warmth" min="0" max="100" value="50"
+                style="width:110px;accent-color:var(--purple-bright)">
+              <span id="vt-warmth-lbl" style="font-family:var(--font-display);font-size:.72rem;color:var(--purple-bright);min-width:32px">50%</span>
+            </div>
+          </label>
+          <label style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:.72rem;color:var(--text-secondary)">Air / Clarity</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="range" id="vt-air" min="0" max="100" value="40"
+                style="width:110px;accent-color:var(--purple-bright)">
+              <span id="vt-air-lbl" style="font-family:var(--font-display);font-size:.72rem;color:var(--purple-bright);min-width:32px">40%</span>
+            </div>
+          </label>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Bottom: processed recordings list + actions -->
+    <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span style="font-family:var(--font-display);font-size:.52rem;color:var(--purple-bright);letter-spacing:.1em">🎤 VOCAL TAKES</span>
+        <div style="display:flex;gap:6px">
+          <button id="vt-apply-btn" style="background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.4);color:#00cfff;border-radius:var(--radius);padding:4px 12px;cursor:pointer;font-size:.68rem;font-weight:700;opacity:.5;pointer-events:none">🔄 PROCESS LAST</button>
+          <button id="vt-add-seq-btn" style="background:rgba(0,255,100,.15);border:1px solid rgba(0,255,100,.4);color:#00ff88;border-radius:var(--radius);padding:4px 12px;cursor:pointer;font-size:.68rem;font-weight:700;opacity:.5;pointer-events:none">➕ ADD TO SEQUENCER</button>
+        </div>
+      </div>
+      <div id="vt-recordings-grid" style="display:flex;flex-wrap:wrap;gap:6px;max-height:90px;overflow-y:auto;min-height:36px;background:rgba(0,0,0,.15);border-radius:8px;padding:6px">
+        <span style="font-size:.7rem;color:var(--text-muted);padding:4px;align-self:center" id="vt-empty-lbl">No takes yet — hit ⏺ to record</span>
+      </div>
+    </div>
+
+  </div>
+
   <div id="view-drums" style="display:none;flex:1;flex-direction:column;overflow:hidden">
     <div class="drums-wrap">
       <div class="drums-toolbar">
@@ -1404,6 +1594,70 @@ select{background:var(--bg-raised);border:1px solid var(--border);color:var(--te
 </div>
 
 <!-- HELP MODAL -->
+<!-- ════ ABOUT MODAL ════ -->
+<div class="modal-overlay" id="about-modal">
+  <div class="modal-box" style="max-width:460px;padding:0;overflow:hidden;border-radius:16px">
+
+    <!-- Header banner -->
+    <div style="background:linear-gradient(135deg,#0D0D1A 0%,#1A0033 50%,#0D0D1A 100%);padding:32px 24px 24px;text-align:center;position:relative;overflow:hidden">
+      <!-- Animated bg stars (CSS only) -->
+      <div style="position:absolute;inset:0;background:radial-gradient(circle at 30% 40%,rgba(159,0,255,.18) 0%,transparent 60%),radial-gradient(circle at 70% 60%,rgba(0,200,255,.1) 0%,transparent 50%)"></div>
+      <div style="position:relative;z-index:1">
+        <div style="font-size:3.2rem;margin-bottom:6px;filter:drop-shadow(0 0 20px rgba(159,0,255,.8))">🦇</div>
+        <div style="font-family:var(--font-display);font-size:2rem;font-weight:900;letter-spacing:.1em;
+          background:linear-gradient(90deg,#9F00FF,#FF00FF,#00CFFF);-webkit-background-clip:text;
+          -webkit-text-fill-color:transparent;background-clip:text;text-shadow:none">GIGO</div>
+        <div style="font-size:.72rem;color:rgba(255,255,255,.5);letter-spacing:.25em;margin-top:2px">BEAT MAKER</div>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div style="padding:22px 24px">
+
+      <!-- Developer card -->
+      <div style="background:rgba(159,0,255,.08);border:1px solid rgba(159,0,255,.2);border-radius:12px;padding:16px 18px;margin-bottom:16px;display:flex;align-items:center;gap:14px">
+        <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#9F00FF,#FF00FF);
+          display:flex;align-items:center;justify-content:center;font-size:1.4rem;
+          box-shadow:0 0 18px rgba(159,0,255,.5);flex-shrink:0">👨‍💻</div>
+        <div>
+          <div style="font-size:.65rem;color:var(--text-muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:2px">Developer</div>
+          <div style="font-family:var(--font-display);font-size:1rem;font-weight:700;color:#fff;letter-spacing:.05em">Diorarlone</div>
+          <div style="font-size:.72rem;color:var(--purple-bright);margin-top:1px">diorarlone@gmail.com</div>
+        </div>
+      </div>
+
+      <!-- About text -->
+      <p style="font-size:.8rem;color:var(--text-secondary);line-height:1.7;margin:0 0 14px">
+        GIGO is a browser-based beat maker built for hip-hop producers, bedroom artists, and
+        anyone who wants to make hard beats without downloading anything.
+        98+ sounds, 90s sample packs, live recording, guitar tab, piano — all in one tab.
+      </p>
+
+      <!-- Feature pills -->
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px">
+        <span style="font-size:.65rem;padding:3px 10px;border-radius:10px;background:rgba(159,0,255,.12);border:1px solid rgba(159,0,255,.25);color:var(--purple-bright)">🥁 116 Sounds</span>
+        <span style="font-size:.65rem;padding:3px 10px;border-radius:10px;background:rgba(0,200,255,.1);border:1px solid rgba(0,200,255,.25);color:#00cfff">🎚️ 19 Presets</span>
+        <span style="font-size:.65rem;padding:3px 10px;border-radius:10px;background:rgba(0,255,100,.1);border:1px solid rgba(0,255,100,.25);color:#00ff88">🎸 Guitar Tab</span>
+        <span style="font-size:.65rem;padding:3px 10px;border-radius:10px;background:rgba(255,170,0,.1);border:1px solid rgba(255,170,0,.25);color:#FFAA00">🎹 Piano</span>
+        <span style="font-size:.65rem;padding:3px 10px;border-radius:10px;background:rgba(255,0,100,.1);border:1px solid rgba(255,0,100,.25);color:#ff6688">🎙️ Voice Rec</span>
+        <span style="font-size:.65rem;padding:3px 10px;border-radius:10px;background:rgba(100,50,200,.1);border:1px solid rgba(100,50,200,.3);color:#cc99ff">💿 90s Samples</span>
+      </div>
+
+      <!-- Version + copyright -->
+      <div style="border-top:1px solid rgba(255,255,255,.07);padding-top:12px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:.65rem;color:var(--text-muted)">Version 4.0 · 2025</span>
+        <span style="font-size:.65rem;color:var(--text-muted)">© Diorarlone · All rights reserved</span>
+      </div>
+    </div>
+
+    <div style="padding:0 24px 20px;text-align:center">
+      <button id="close-about" style="padding:10px 32px;background:linear-gradient(135deg,var(--purple-bright),#FF00FF);
+        border:none;border-radius:8px;color:#fff;font-weight:700;cursor:pointer;font-size:.88rem;
+        box-shadow:0 3px 14px rgba(159,0,255,.4)">CLOSE</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="help-modal">
   <div class="modal-box">
     <h2>🦇 How to Use Gigo</h2>
@@ -1861,15 +2115,21 @@ const S={
   drumStick(t,p={}){const{volume:v=0.85,pitch:hz=280,decay:d=0.15}=p;const o=AC.createOscillator();o.type='triangle';o.frequency.setValueAtTime(hz*1.8,t);o.frequency.exponentialRampToValueAtTime(hz,t+.02);o.frequency.exponentialRampToValueAtTime(hz*.5,t+d);const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);const n=AC.createBufferSource();n.buffer=noise();const nf=AC.createBiquadFilter();nf.type='bandpass';nf.frequency.value=3500;nf.Q.value=1.5;const ng=AC.createGain();ng.gain.setValueAtTime(v*.4,t);ng.gain.exponentialRampToValueAtTime(.001,t+.05);o.connect(g);g.connect(MG);n.connect(nf);nf.connect(ng);ng.connect(MG);o.start(t);o.stop(t+d+.02);n.start(t);n.stop(t+.07);},
   drumFloor(t,p={}){const{volume:v=0.9,pitch:hz=68,decay:d=0.5}=p;const o=AC.createOscillator();o.type='sine';o.frequency.setValueAtTime(hz*2.5,t);o.frequency.exponentialRampToValueAtTime(hz,t+.04);o.frequency.exponentialRampToValueAtTime(hz*.55,t+d);const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);const n=AC.createBufferSource();n.buffer=pink();const nf=AC.createBiquadFilter();nf.type='lowpass';nf.frequency.value=600;const ng=AC.createGain();ng.gain.setValueAtTime(v*.25,t);ng.gain.exponentialRampToValueAtTime(.001,t+.1);o.connect(g);g.connect(MG);n.connect(nf);nf.connect(ng);ng.connect(MG);o.start(t);o.stop(t+d+.05);n.start(t);n.stop(t+.12);},
   userSample(t,p={},buf=null){
-    if(!buf)return;
+    if(!buf){ return; }
     const{volume:v=1,pitch:pr=1}=p;
-    const src=AC.createBufferSource();src.buffer=buf;src.playbackRate.value=pr;
-    const g=AC.createGain();g.gain.value=v;src.connect(g);g.connect(MG);
-    if(!window.activeAudioSources)window.activeAudioSources=[];
-    const sourceId=Date.now()+Math.random();
-    window.activeAudioSources.push({id:sourceId,source:src});
-    src.onended=()=>{if(window.activeAudioSources)window.activeAudioSources=window.activeAudioSources.filter(s=>s.id!==sourceId);};
-    src.start(t);
+    try{
+      const src=AC.createBufferSource();
+      src.buffer=buf;
+      src.playbackRate.value=pr||1;
+      const g=AC.createGain();g.gain.value=Math.max(0,v||1);
+      src.connect(g);g.connect(MG);
+      if(!window.activeAudioSources)window.activeAudioSources=[];
+      const sourceId=Date.now()+Math.random();
+      window.activeAudioSources.push({id:sourceId,source:src});
+      src.onended=()=>{window.activeAudioSources=window.activeAudioSources.filter(s=>s.id!==sourceId);};
+      // clamp start time: never in the past
+      src.start(Math.max(AC.currentTime, t));
+    }catch(e){ console.warn('userSample error:',e); }
   },
 
   // ══ MORE BASS ══
@@ -2239,6 +2499,248 @@ const S={
     osc.connect(dist);dist.connect(f);f.connect(g);g.connect(MG);
     osc.start(t);osc.stop(t+d+.05);},
 
+
+  // ═══════════════════════════════════════════
+  //  90s HIP-HOP SOUND LIBRARY
+  // ═══════════════════════════════════════════
+
+  // ── SP-1200 / MPC60 style crispy kicks ──
+  kickSP1200(t,p={}){const{volume:v=1,pitch:hz=50,decay:d=0.38}=p;
+    // Gritty, punchy, slightly saturated — classic sampler aliasing
+    const o=AC.createOscillator();o.type='sine';
+    o.frequency.setValueAtTime(hz*5,t);o.frequency.exponentialRampToValueAtTime(hz,t+.025);o.frequency.exponentialRampToValueAtTime(hz*.55,t+d*.5);
+    const dist=AC.createWaveShaper();dist.curve=mkDist(60);dist.oversample='2x';
+    const hpf=AC.createBiquadFilter();hpf.type='highpass';hpf.frequency.value=40;
+    // Body noise (SP texture)
+    const n=AC.createBufferSource();n.buffer=pink();
+    const nf=AC.createBiquadFilter();nf.type='lowpass';nf.frequency.value=300;
+    const ng=AC.createGain();ng.gain.setValueAtTime(v*.3,t);ng.gain.exponentialRampToValueAtTime(.001,t+.06);
+    const g=AC.createGain();g.gain.setValueAtTime(v*.95,t+.002);g.gain.exponentialRampToValueAtTime(.001,t+d);
+    o.connect(dist);dist.connect(hpf);hpf.connect(g);g.connect(MG);
+    n.connect(nf);nf.connect(ng);ng.connect(MG);
+    o.start(t);o.stop(t+d+.1);n.start(t);n.stop(t+.08);},
+
+  // ── Boom Bap snare with rimshot crack ──
+  snare90s(t,p={}){const{volume:v=1,pitch:hz=220,decay:d=0.26}=p;
+    // Layered: noise body + tone + crack transient
+    const n=AC.createBufferSource();n.buffer=noise();
+    const nbp=AC.createBiquadFilter();nbp.type='bandpass';nbp.frequency.value=2800;nbp.Q.value=.6;
+    const nhp=AC.createBiquadFilter();nhp.type='highpass';nhp.frequency.value=900;
+    const ng=AC.createGain();ng.gain.setValueAtTime(v*.9,t);ng.gain.exponentialRampToValueAtTime(.001,t+d);
+    n.connect(nbp);nbp.connect(nhp);nhp.connect(ng);ng.connect(MG);n.start(t);n.stop(t+d+.05);
+    // Tone body
+    const o=AC.createOscillator();o.type='triangle';
+    o.frequency.setValueAtTime(hz,t);o.frequency.exponentialRampToValueAtTime(hz*.4,t+d*.6);
+    const og=AC.createGain();og.gain.setValueAtTime(v*.55,t);og.gain.exponentialRampToValueAtTime(.001,t+d*.7);
+    o.connect(og);og.connect(MG);o.start(t);o.stop(t+d);
+    // Crack
+    const c=AC.createBufferSource();c.buffer=noise();
+    const cf=AC.createBiquadFilter();cf.type='highpass';cf.frequency.value=5000;
+    const cg=AC.createGain();cg.gain.setValueAtTime(v*.7,t);cg.gain.exponentialRampToValueAtTime(.001,t+.022);
+    c.connect(cf);cf.connect(cg);cg.connect(MG);c.start(t);c.stop(t+.03);},
+
+  // ── Classic SP hi-hat (swung, gritty) ──
+  hihatSP(t,p={}){const{volume:v=0.7,decay:d=0.055}=p;
+    const n=AC.createBufferSource();n.buffer=noise();
+    // Two bandpass layers for metallic shimmer
+    const b1=AC.createBiquadFilter();b1.type='bandpass';b1.frequency.value=8000;b1.Q.value=1;
+    const b2=AC.createBiquadFilter();b2.type='highpass';b2.frequency.value=12000;
+    const dist=AC.createWaveShaper();dist.curve=mkDist(20);
+    const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);
+    n.connect(b1);b1.connect(b2);b2.connect(dist);dist.connect(g);g.connect(MG);
+    n.start(t);n.stop(t+d+.01);},
+
+  // ── Open hat with shimmer ──
+  hihatOpen90s(t,p={}){const{volume:v=0.6,decay:d=0.55}=p;
+    const n=AC.createBufferSource();n.buffer=noise();
+    const b1=AC.createBiquadFilter();b1.type='bandpass';b1.frequency.value=7000;b1.Q.value=.5;
+    const b2=AC.createBiquadFilter();b2.type='highpass';b2.frequency.value=10000;
+    const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);
+    n.connect(b1);b1.connect(b2);b2.connect(g);g.connect(MG);n.start(t);n.stop(t+d+.05);},
+
+  // ── Hard clap (layers, 90s NY style) ──
+  clap90s(t,p={}){const{volume:v=0.9,decay:d=0.2}=p;
+    [0,.009,.018,.027].forEach(off=>{
+      const n=AC.createBufferSource();n.buffer=noise();
+      const f=AC.createBiquadFilter();f.type='bandpass';
+      f.frequency.value=1600+Math.random()*600;f.Q.value=.55;
+      const g=AC.createGain();g.gain.setValueAtTime(v*.8,t+off);g.gain.exponentialRampToValueAtTime(.001,t+off+d*(1-off*2));
+      n.connect(f);f.connect(g);g.connect(MG);n.start(t+off);n.stop(t+off+d+.05);});
+    // Snap transient
+    const sn=AC.createBufferSource();sn.buffer=noise();
+    const sf=AC.createBiquadFilter();sf.type='highpass';sf.frequency.value=4000;
+    const sg=AC.createGain();sg.gain.setValueAtTime(v,t);sg.gain.exponentialRampToValueAtTime(.001,t+.015);
+    sn.connect(sf);sf.connect(sg);sg.connect(MG);sn.start(t);sn.stop(t+.02);},
+
+  // ── Chopped soul sample texture (MPC flip vibe) ──
+  soulFlip(t,p={}){const{volume:v=0.82,pitch:hz=330,decay:d=0.38}=p;
+    // Stacked harmonics — mimics a sped-up soul vocal chop
+    [[1,1],[2,.5],[3,.3],[4,.15],[5,.08]].forEach(([h,a])=>{
+      const o=AC.createOscillator();o.type=h%2===0?'sawtooth':'triangle';
+      o.frequency.value=hz*h;o.detune.value=(Math.random()-.5)*8;
+      const g=AC.createGain();g.gain.setValueAtTime(v*a*.55,t);g.gain.exponentialRampToValueAtTime(.001,t+d*(1-h*.06));
+      o.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.05);});
+    // Vinyl saturation layer
+    const n=AC.createBufferSource();n.buffer=pink();
+    const nf=AC.createBiquadFilter();nf.type='peaking';nf.frequency.value=3000;nf.gain.value=8;nf.Q.value=1.2;
+    const ng=AC.createGain();ng.gain.setValueAtTime(v*.06,t);ng.gain.exponentialRampToValueAtTime(.001,t+.04);
+    n.connect(nf);nf.connect(ng);ng.connect(MG);n.start(t);n.stop(t+.05);},
+
+  // ── Dusty Rhodes chop (filtered/lofi EP) ──
+  dustyRhodes(t,p={}){const{volume:v=0.78,pitch:hz=261.63,decay:d=1.4}=p;
+    const mod=AC.createOscillator();mod.type='sine';mod.frequency.value=hz*.998;
+    const modG=AC.createGain();modG.gain.setValueAtTime(hz*4,t);modG.gain.exponentialRampToValueAtTime(hz*.08,t+.2);
+    mod.connect(modG);
+    const car=AC.createOscillator();car.type='sine';car.frequency.value=hz;
+    modG.connect(car.frequency);
+    // Dusty lowpass — dark, vintage
+    const lpf=AC.createBiquadFilter();lpf.type='lowpass';lpf.frequency.value=2200;lpf.Q.value=1.2;
+    // Tape saturation
+    const dist=AC.createWaveShaper();dist.curve=mkDist(18);
+    // Vinyl noise
+    const n=AC.createBufferSource();n.buffer=pink();
+    const nf=AC.createBiquadFilter();nf.type='highpass';nf.frequency.value=3500;
+    const ng=AC.createGain();ng.gain.setValueAtTime(v*.04,t);ng.gain.exponentialRampToValueAtTime(.001,t+d*.3);
+    n.connect(nf);nf.connect(ng);ng.connect(MG);n.start(t);n.stop(t+.4);
+    const g=AC.createGain();g.gain.setValueAtTime(v*.85,t);g.gain.exponentialRampToValueAtTime(.001,t+d);
+    car.connect(dist);dist.connect(lpf);lpf.connect(g);g.connect(MG);
+    mod.start(t);car.start(t);mod.stop(t+d+.1);car.stop(t+d+.1);},
+
+  // ── Moog-style bassline (Think: 90s NY rap bass) ──
+  moogBass(t,p={}){const{volume:v=0.88,pitch:hz=65,decay:d=0.55}=p;
+    const o1=AC.createOscillator();o1.type='sawtooth';o1.frequency.value=hz;
+    const o2=AC.createOscillator();o2.type='sawtooth';o2.frequency.value=hz*2;o2.detune.value=-4;
+    // Ladder filter simulation: cascaded lowpass
+    const f1=AC.createBiquadFilter();f1.type='lowpass';
+    f1.frequency.setValueAtTime(3200,t);f1.frequency.exponentialRampToValueAtTime(hz*3,t+.08);f1.Q.value=6;
+    const f2=AC.createBiquadFilter();f2.type='lowpass';f2.frequency.value=800;f2.Q.value=3;
+    const g=AC.createGain();g.gain.setValueAtTime(v*.55,t);g.gain.exponentialRampToValueAtTime(.001,t+d);
+    o1.connect(f1);o2.connect(f1);f1.connect(f2);f2.connect(g);g.connect(MG);
+    o1.start(t);o2.start(t);o1.stop(t+d+.05);o2.stop(t+d+.05);},
+
+  // ── Slap bass stab (funk/hip-hop transition) ──
+  slapBass(t,p={}){const{volume:v=0.9,pitch:hz=80,decay:d=0.45}=p;
+    const len=Math.ceil(AC.sampleRate/hz);
+    const buf=AC.createBuffer(1,Math.ceil(AC.sampleRate*(d+.1)),AC.sampleRate);
+    const d0=buf.getChannelData(0);
+    // Excite with noisy burst (slap transient)
+    for(let i=0;i<len*1.5;i++) d0[i]=(Math.random()*2-1)*(i<len?.9:.3);
+    for(let i=Math.ceil(len*1.5);i<d0.length;i++) d0[i]=0.996*(d0[i-len]+d0[i-len+1])*.5;
+    const src=AC.createBufferSource();src.buffer=buf;
+    const click=AC.createBufferSource();click.buffer=noise();
+    const cf=AC.createBiquadFilter();cf.type='highpass';cf.frequency.value=2000;
+    const cg=AC.createGain();cg.gain.setValueAtTime(v*.4,t);cg.gain.exponentialRampToValueAtTime(.001,t+.012);
+    click.connect(cf);cf.connect(cg);cg.connect(MG);click.start(t);click.stop(t+.015);
+    const lpf=AC.createBiquadFilter();lpf.type='lowpass';lpf.frequency.value=3000;
+    const g=AC.createGain();g.gain.setValueAtTime(v*.9,t);g.gain.exponentialRampToValueAtTime(.001,t+d);
+    src.connect(lpf);lpf.connect(g);g.connect(MG);src.start(t);src.stop(t+d+.1);},
+
+  // ── Classic 90s piano stab (RZA/DJ Premier style) ──
+  pianoStab90s(t,p={}){const{volume:v=0.82,pitch:hz=523,decay:d=0.55}=p;
+    // MPC-chopped piano: bright attack, dark rolloff, slight pitch wobble
+    const mod=AC.createOscillator();mod.type='sine';mod.frequency.value=hz*1.001;
+    const modG=AC.createGain();modG.gain.setValueAtTime(hz*1.5,t);modG.gain.exponentialRampToValueAtTime(0,t+.04);
+    mod.connect(modG);
+    const car=AC.createOscillator();car.type='sine';car.frequency.value=hz;
+    modG.connect(car.frequency);
+    const o2=AC.createOscillator();o2.type='triangle';o2.frequency.value=hz*2;
+    const o3=AC.createOscillator();o3.type='sine';o3.frequency.value=hz*3;
+    const lpf=AC.createBiquadFilter();lpf.type='lowpass';
+    lpf.frequency.setValueAtTime(5000,t);lpf.frequency.exponentialRampToValueAtTime(1200,t+.12);
+    // Bright crack
+    const n=AC.createBufferSource();n.buffer=noise();
+    const nf=AC.createBiquadFilter();nf.type='highpass';nf.frequency.value=6000;
+    const ng=AC.createGain();ng.gain.setValueAtTime(v*.15,t);ng.gain.exponentialRampToValueAtTime(.001,t+.018);
+    n.connect(nf);nf.connect(ng);ng.connect(MG);n.start(t);n.stop(t+.025);
+    const g=AC.createGain();g.gain.setValueAtTime(v*.7,t);g.gain.exponentialRampToValueAtTime(.001,t+d);
+    [car,o2,o3].forEach(o=>{o.connect(lpf);o.start(t);o.stop(t+d+.05);});
+    lpf.connect(g);g.connect(MG);mod.start(t);mod.stop(t+.1);},
+
+  // ── Boom Bap organ stab (like Wu-Tang, Pete Rock) ──
+  organStab90s(t,p={}){const{volume:v=0.75,pitch:hz=261.63,decay:d=0.4}=p;
+    [[1,.9],[2,.7],[3,.4],[4,.25],[6,.12]].forEach(([h,a])=>{
+      const o=AC.createOscillator();o.type='sine';o.frequency.value=hz*h;
+      const lpf=AC.createBiquadFilter();lpf.type='lowpass';lpf.frequency.value=3000;
+      const g=AC.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v*a*.55,t+.008);
+      g.gain.setValueAtTime(v*a*.55,t+.04);g.gain.exponentialRampToValueAtTime(.001,t+d);
+      o.connect(lpf);lpf.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.05);});},
+
+  // ── Sitar pluck (Timbaland-era eastern flavor) ──
+  sitarPluck(t,p={}){const{volume:v=0.78,pitch:hz=294,decay:d=1.1}=p;
+    const len=Math.ceil(AC.sampleRate/hz);
+    const buf=AC.createBuffer(1,Math.ceil(AC.sampleRate*(d+.2)),AC.sampleRate);
+    const data=buf.getChannelData(0);
+    // Sitar buzz: combine KS with inharmonic partials seed
+    for(let i=0;i<len;i++) data[i]=(Math.random()*2-1)*.7+Math.sin(2*Math.PI*i/len*3)*.3;
+    for(let i=len;i<data.length;i++) data[i]=0.998*(data[i-len]*.6+data[i-len+1]*.4);
+    const src=AC.createBufferSource();src.buffer=buf;
+    // Sympathetic drone string
+    const drone=AC.createOscillator();drone.type='triangle';drone.frequency.value=hz*.5;
+    drone.detune.value=2;
+    const df=AC.createBiquadFilter();df.type='bandpass';df.frequency.value=hz*.5;df.Q.value=8;
+    const dg=AC.createGain();dg.gain.setValueAtTime(v*.12,t);dg.gain.exponentialRampToValueAtTime(.001,t+d*.7);
+    drone.connect(df);df.connect(dg);dg.connect(MG);drone.start(t);drone.stop(t+d+.1);
+    const bpf=AC.createBiquadFilter();bpf.type='bandpass';bpf.frequency.value=hz*2;bpf.Q.value=2;
+    const g=AC.createGain();g.gain.setValueAtTime(v*.8,t);g.gain.exponentialRampToValueAtTime(.001,t+d);
+    src.connect(bpf);bpf.connect(g);g.connect(MG);src.start(t);src.stop(t+d+.1);},
+
+  // ── Vinyl scratch short (battle DJ style) ──
+  scratchShort(t,p={}){const{volume:v=0.85,decay:d=0.14}=p;
+    const o=AC.createOscillator();o.type='sawtooth';
+    o.frequency.setValueAtTime(600,t);o.frequency.exponentialRampToValueAtTime(150,t+d*.4);
+    o.frequency.exponentialRampToValueAtTime(800,t+d*.8);
+    const bpf=AC.createBiquadFilter();bpf.type='bandpass';bpf.frequency.value=1800;bpf.Q.value=2.5;
+    const n=AC.createBufferSource();n.buffer=noise();
+    const nf=AC.createBiquadFilter();nf.type='bandpass';nf.frequency.value=2200;nf.Q.value=1.5;
+    const ng=AC.createGain();ng.gain.setValueAtTime(v*.3,t);ng.gain.exponentialRampToValueAtTime(.001,t+d);
+    n.connect(nf);nf.connect(ng);ng.connect(MG);n.start(t);n.stop(t+d+.05);
+    const g=AC.createGain();g.gain.setValueAtTime(v*.6,t);g.gain.exponentialRampToValueAtTime(.001,t+d);
+    o.connect(bpf);bpf.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.05);},
+
+  // ── Record stop (classic DJ effect) ──
+  recordStop(t,p={}){const{volume:v=0.8,pitch:hz=300,decay:d=0.9}=p;
+    const o=AC.createOscillator();o.type='sawtooth';
+    o.frequency.setValueAtTime(hz,t);o.frequency.exponentialRampToValueAtTime(hz*.04,t+d);
+    const lpf=AC.createBiquadFilter();lpf.type='lowpass';lpf.frequency.value=2500;
+    const dist=AC.createWaveShaper();dist.curve=mkDist(30);
+    const g=AC.createGain();g.gain.setValueAtTime(v*.6,t);g.gain.exponentialRampToValueAtTime(.001,t+d*.85);
+    o.connect(dist);dist.connect(lpf);lpf.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.1);},
+
+  // ── Sub rumble (low-end foundation, Dre/Timbo style) ──
+  subRumble(t,p={}){const{volume:v=0.88,pitch:hz=38,decay:d=1.6}=p;
+    const o1=AC.createOscillator();o1.type='sine';o1.frequency.value=hz;
+    const o2=AC.createOscillator();o2.type='sine';o2.frequency.value=hz*2;o2.detune.value=3;
+    const lfo=AC.createOscillator();lfo.type='sine';lfo.frequency.value=1.5;
+    const lfoG=AC.createGain();lfoG.gain.value=hz*.04;
+    lfo.connect(lfoG);lfoG.connect(o1.frequency);
+    const g1=AC.createGain();g1.gain.setValueAtTime(v*.7,t);g1.gain.exponentialRampToValueAtTime(.001,t+d);
+    const g2=AC.createGain();g2.gain.setValueAtTime(v*.2,t);g2.gain.exponentialRampToValueAtTime(.001,t+d*.6);
+    o1.connect(g1);o2.connect(g2);g1.connect(MG);g2.connect(MG);
+    o1.start(t);o2.start(t);lfo.start(t);o1.stop(t+d+.1);o2.stop(t+d+.1);lfo.stop(t+d+.1);},
+
+  // ── Horns stab — brassy, aggressive (EPMD, BDK style) ──
+  hornStab90s(t,p={}){const{volume:v=0.8,decay:d=0.32}=p;
+    // Tritone horn chord: A3+Eb4+A4
+    [220, 311.13, 440].forEach((hz,i)=>{
+      const o=AC.createOscillator();o.type='sawtooth';o.frequency.value=hz;
+      const f1=AC.createBiquadFilter();f1.type='peaking';f1.frequency.value=900;f1.Q.value=2;f1.gain.value=7;
+      const f2=AC.createBiquadFilter();f2.type='lowpass';
+      f2.frequency.setValueAtTime(4000,t);f2.frequency.exponentialRampToValueAtTime(1800,t+.07);
+      const g=AC.createGain();const dt=t+i*.012;
+      g.gain.setValueAtTime(0,dt);g.gain.linearRampToValueAtTime(v*.35,dt+.016);
+      g.gain.exponentialRampToValueAtTime(.001,dt+d);
+      o.connect(f1);f1.connect(f2);f2.connect(g);g.connect(MG);o.start(dt);o.stop(dt+d+.05);});},
+
+  // ── Cinematic string hit (large ensemble, filmic 90s) ──
+  stringHit90s(t,p={}){const{volume:v=0.72,pitch:hz=220,decay:d=1.8}=p;
+    const voices=[[hz,0],[hz*1.004,6],[hz*0.997,-5],[hz*2.001,2],[hz*1.999,-2],[hz*3,1]];
+    voices.forEach(([f,det])=>{
+      const o=AC.createOscillator();o.type='sawtooth';o.frequency.value=f;o.detune.value=det;
+      const lpf=AC.createBiquadFilter();lpf.type='lowpass';lpf.frequency.value=2200;lpf.Q.value=.4;
+      const g=AC.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v*.18,t+.06);
+      g.gain.setValueAtTime(v*.18,t+d-.5);g.gain.exponentialRampToValueAtTime(.001,t+d);
+      o.connect(lpf);lpf.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.1);});},
+
   // Generic piano note from frequency
   pianoNote(t,hz,v=0.8,d=1.4){[[1,1],[2,.5],[3,.33],[4,.25],[6,.15]].forEach(([h,a])=>{const o=AC.createOscillator();o.type='sine';o.frequency.value=hz*h;const g=AC.createGain();g.gain.setValueAtTime(v*a,t);g.gain.exponentialRampToValueAtTime(.001,t+d*(1-h*.04));o.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.05);});}
 };
@@ -2430,6 +2932,28 @@ const AVAILABLE_TRACKS = [
   {id:'vocalHey',      label:'Vocal Hey',    emoji:'✌️',sound:'vocalHey',      color:'#FF22BB',params:{pitch:330,decay:0.28},group:'VOCALS'},
   {id:'vocalYeah',     label:'Vocal Yeah',   emoji:'🙌',sound:'vocalYeah',     color:'#FF55CC',params:{pitch:277,decay:0.32},group:'VOCALS'},
   {id:'vocalAdLib',    label:'Vocal Ad-lib', emoji:'💬',sound:'vocalAdLib',    color:'#FF33AA',params:{pitch:440,decay:0.2}, group:'VOCALS'},
+
+  // ── 90s HIP-HOP DRUMS ──
+  {id:'kickSP1200',   label:'SP-1200 Kick',  emoji:'💥',sound:'kickSP1200',  color:'#8800BB',params:{pitch:50, decay:0.38},group:'90S-DRUMS'},
+  {id:'snare90s',     label:'90s Snare',     emoji:'🔫',sound:'snare90s',    color:'#AA22CC',params:{decay:0.26},         group:'90S-DRUMS'},
+  {id:'hihatSP',      label:'SP Hi-Hat',     emoji:'🎩',sound:'hihatSP',     color:'#6600AA',params:{decay:0.055},        group:'90S-DRUMS'},
+  {id:'hihatOpen90s', label:'Open Hat 90s',  emoji:'🔓',sound:'hihatOpen90s',color:'#7700BB',params:{decay:0.55},         group:'90S-DRUMS'},
+  {id:'clap90s',      label:'90s Clap',      emoji:'👏',sound:'clap90s',     color:'#9933BB',params:{decay:0.2},          group:'90S-DRUMS'},
+  // ── 90s BASS ──
+  {id:'moogBass',     label:'Moog Bass',     emoji:'🌀',sound:'moogBass',    color:'#440099',params:{pitch:65, decay:0.55},group:'90S-BASS'},
+  {id:'slapBass',     label:'Slap Bass',     emoji:'🎸',sound:'slapBass',    color:'#550088',params:{pitch:80, decay:0.45},group:'90S-BASS'},
+  {id:'subRumble',    label:'Sub Rumble',    emoji:'🔊',sound:'subRumble',   color:'#330077',params:{pitch:38, decay:1.6}, group:'90S-BASS'},
+  // ── 90s MELODIC ──
+  {id:'dustyRhodes',  label:'Dusty Rhodes',  emoji:'🎹',sound:'dustyRhodes', color:'#005577',params:{pitch:261.63,decay:1.4},group:'90S-MELODY'},
+  {id:'pianoStab90s', label:'Piano Stab',    emoji:'🎵',sound:'pianoStab90s',color:'#006688',params:{pitch:523,  decay:0.55},group:'90S-MELODY'},
+  {id:'organStab90s', label:'Organ Stab',    emoji:'⛪',sound:'organStab90s',color:'#007799',params:{pitch:261.63,decay:0.4},group:'90S-MELODY'},
+  {id:'soulFlip',     label:'Soul Flip',     emoji:'✨',sound:'soulFlip',    color:'#BB5500',params:{pitch:330,  decay:0.38},group:'90S-MELODY'},
+  {id:'sitarPluck',   label:'Sitar Pluck',   emoji:'🪕',sound:'sitarPluck',  color:'#AA7700',params:{pitch:294,  decay:1.1}, group:'90S-MELODY'},
+  {id:'hornStab90s',  label:'Horn Stab',     emoji:'📯',sound:'hornStab90s', color:'#CC6600',params:{decay:0.32},          group:'90S-MELODY'},
+  {id:'stringHit90s', label:'String Hit',    emoji:'🎻',sound:'stringHit90s',color:'#0066AA',params:{pitch:220,  decay:1.8}, group:'90S-MELODY'},
+  // ── 90s FX ──
+  {id:'scratchShort', label:'Scratch Short', emoji:'💿',sound:'scratchShort',color:'#FF0066',params:{decay:0.14},          group:'90S-FX'},
+  {id:'recordStop',   label:'Record Stop',   emoji:'📼',sound:'recordStop',  color:'#DD0055',params:{pitch:300, decay:0.9}, group:'90S-FX'},
   {id:'guitar1',    label:'Guitar Lo',   emoji:'🎸',sound:'guitar',     color:'#FF7700',params:{pitch:196,decay:1.2}, group:'GUITAR'},
   {id:'guitar2',    label:'Guitar Hi',   emoji:'🎸',sound:'guitar',     color:'#FF8800',params:{pitch:294,decay:1.0}, group:'GUITAR'},
   {id:'guitarChord',label:'Gtr Chord',   emoji:'🎵',sound:'guitarChord',color:'#FFAA33',params:{decay:1.0},           group:'GUITAR'},
@@ -2441,7 +2965,7 @@ const AVAILABLE_TRACKS = [
   {id:'sample1',    label:'Sample 1',    emoji:'🎤',sound:'userSample', color:'#FF00FF',params:{volume:1},            group:'SAMPLES'},
   {id:'sample2',    label:'Sample 2',    emoji:'🎵',sound:'userSample', color:'#EE00EE',params:{volume:1},            group:'SAMPLES'},
 ];
-const GRP_LABELS={KICKS:'⚡ KICKS',SNARES:'💥 SNARES','HI-HATS':'🎩 HI-HATS',CLAPS:'👏 CLAPS',BASS:'🔊 BASS','HH-BASS':'🔊 HIP-HOP BASS','HH-DRUMS':'🥁 HIP-HOP DRUMS','HH-MELODY':'🎹 HIP-HOP MELODY','HH-FX':'🌀 HIP-HOP FX',PERC:'🥁 PERCUSSION',CYMBALS:'🔔 CYMBALS',FX:'🌀 FX','FX-TRANS':'🌀 FX & TRANSITIONS',GUITAR:'🎸 GUITAR',PIANO:'🎹 PIANO',DRUMS:'🥁 DRUM KIT',SAMPLES:'🎤 SAMPLES','SYNTH-LEADS':'🔷 SYNTHS & LEADS','PADS':'☁️ PADS & ATMOSPHERE','MELODIC':'🎹 MELODIC INSTRUMENTS','VOCALS':'🎤 VOCAL CHOPS','AUDIO RECORDINGS':'🎵 RECORDINGS'};
+const GRP_LABELS={KICKS:'⚡ KICKS',SNARES:'💥 SNARES','HI-HATS':'🎩 HI-HATS',CLAPS:'👏 CLAPS',BASS:'🔊 BASS','HH-BASS':'🔊 HIP-HOP BASS','HH-DRUMS':'🥁 HIP-HOP DRUMS','HH-MELODY':'🎹 HIP-HOP MELODY','HH-FX':'🌀 HIP-HOP FX',PERC:'🥁 PERCUSSION',CYMBALS:'🔔 CYMBALS',FX:'🌀 FX','FX-TRANS':'🌀 FX & TRANSITIONS',GUITAR:'🎸 GUITAR',PIANO:'🎹 PIANO',DRUMS:'🥁 DRUM KIT',SAMPLES:'🎤 SAMPLES','SYNTH-LEADS':'🔷 SYNTHS & LEADS','PADS':'☁️ PADS & ATMOSPHERE','MELODIC':'🎹 MELODIC INSTRUMENTS','VOCALS':'🎤 VOCAL CHOPS','AUDIO RECORDINGS':'🎵 RECORDINGS','90S-DRUMS':'🥁 90s HIP-HOP DRUMS','90S-BASS':'🔊 90s BASS','90S-MELODY':'🎹 90s MELODIC','90S-FX':'💿 90s FX'};
 
 let STEPS=32;
 let pattern = [];
@@ -2482,7 +3006,16 @@ const PRESETS={
     if(hi>=0){for(let i=0;i<STEPS;i+=2)p[hi][i]=1;}
     return p;},
 
-  'Trap Basic':()=>{const p=blank();p[0][0]=p[0][8]=1;p[3][4]=p[3][12]=1;for(let i=0;i<STEPS;i+=2)p[6][i]=1;p[11][0]=p[11][3]=p[11][6]=p[11][10]=1;return p;},
+  'Trap Basic':()=>{const p=blank();
+    const ki=TRACKS.findIndex(t=>t.id==='kick'||t.id==='kickHard');
+    const si=TRACKS.findIndex(t=>t.id==='snare'||t.id==='boomBapSnare');
+    const hi=TRACKS.findIndex(t=>t.id==='hihatClosed'||t.id==='hihatC'||t.id==='trapHihat');
+    const bi=TRACKS.findIndex(t=>t.id==='bass808'||t.id==='bass808Deep');
+    if(ki>=0){p[ki][0]=p[ki][8]=1;}
+    if(si>=0){p[si][4]=p[si][12]=1;}
+    if(hi>=0){for(let i=0;i<STEPS;i+=2)p[hi][i]=1;}
+    if(bi>=0){p[bi][0]=p[bi][3]=p[bi][6]=p[bi][10]=1;}
+    return p;},
   'Phonk Dark':()=>{const p=blank();
     const ki=TRACKS.findIndex(t=>t.sound==='boomBapKick'||t.id==='kick');
     const si=TRACKS.findIndex(t=>t.id==='drillSnare'||t.sound==='drillSnare');
@@ -2569,13 +3102,223 @@ const PRESETS={
     if(hr>=0){p[hr][7]=p[hr][15]=1;}
     if(bi>=0){p[bi][0]=p[bi][4]=p[bi][8]=p[bi][11]=1;}
     return p;},
-  'Lo-fi Chill':()=>{const p=blank();p[0][0]=p[0][6]=p[0][10]=1;p[3][4]=p[3][12]=1;for(let i=0;i<STEPS;i+=4)p[6][i]=1;p[9][2]=p[9][14]=1;return p;},
-  'House Groove':()=>{const p=blank();for(let i=0;i<STEPS;i+=4)p[0][i]=1;p[3][4]=p[3][12]=1;for(let i=1;i<STEPS;i+=2)p[6][i]=1;p[9][4]=p[9][12]=1;return p;},
-  'Boom Bap':()=>{const p=blank();p[0][0]=p[0][3]=p[0][10]=1;p[3][4]=p[3][12]=1;for(let i=0;i<STEPS;i+=2)p[6][i]=1;return p;},
-  'Drill':()=>{const p=blank();p[0][0]=p[0][4]=p[0][8]=p[0][11]=p[0][14]=1;p[3][4]=p[3][12]=1;for(let i=0;i<16;i++)p[6][i]=1;p[11][0]=p[11][2]=p[11][5]=p[11][9]=1;return p;},
-  'EDM Drop':()=>{const p=blank();for(let i=0;i<STEPS;i+=4)p[0][i]=1;p[9][4]=p[9][12]=1;for(let i=1;i<STEPS;i+=2)p[6][i]=1;p[18][0]=1;return p;},
-  'Phonk':()=>{const p=blank();p[0][0]=p[0][4]=p[0][7]=p[0][8]=p[0][12]=1;p[3][4]=p[3][12]=1;for(let i=0;i<STEPS;i+=2)p[6][i]=1;p[11][0]=p[11][2]=p[11][8]=p[11][10]=1;return p;},
-  'Afrobeats':()=>{const p=blank();for(let i=0;i<STEPS;i+=4)p[0][i]=1;p[3][4]=p[3][12]=1;[0,2,3,5,8,10,11,13].forEach(s=>{if(s<STEPS)p[23][s]=1;});return p;},
+  'Lo-fi Chill':()=>{const p=blank();
+    const ki=TRACKS.findIndex(t=>t.id==='kick'||t.id==='kickTape'||t.id==='boomBapKick');
+    const si=TRACKS.findIndex(t=>t.id==='boomBapSnare'||t.id==='snare');
+    const hi=TRACKS.findIndex(t=>t.id==='hihatC'||t.id==='hihatClosed');
+    const vi=TRACKS.findIndex(t=>t.id==='vinylCrackle');
+    const bi=TRACKS.findIndex(t=>t.id==='bassPluck'||t.id==='moogBass');
+    if(ki>=0){p[ki][0]=p[ki][6]=p[ki][10]=1;}
+    if(si>=0){p[si][4]=p[si][12]=1;}
+    if(hi>=0){[0,4,6,8,12,14].forEach(i=>{if(i<STEPS)p[hi][i]=1;});}
+    if(vi>=0){for(let i=0;i<STEPS;i+=4)p[vi][i]=1;}
+    if(bi>=0){p[bi][0]=p[bi][4]=p[bi][8]=p[bi][12]=1;}
+    return p;},
+  // ── 90s HIP-HOP PRESETS ──
+
+  // DJ Premier / Gang Starr — boom bap with jazz chop
+  'Premier Style':()=>{const p=blank();
+    const ki=TRACKS.findIndex(t=>t.id==='kickSP1200'||t.id==='boomBapKick'||t.id==='kick');
+    const si=TRACKS.findIndex(t=>t.id==='snare90s'||t.id==='boomBapSnare'||t.id==='snare');
+    const hi=TRACKS.findIndex(t=>t.id==='hihatSP'||t.id==='hihatClosed'||t.id==='hihatC');
+    const ho=TRACKS.findIndex(t=>t.id==='hihatOpen90s'||t.id==='hihatO');
+    const bi=TRACKS.findIndex(t=>t.id==='moogBass'||t.id==='bassPluck');
+    const pi=TRACKS.findIndex(t=>t.id==='pianoStab90s'||t.id==='lofiChop');
+    const ri=TRACKS.findIndex(t=>t.id==='rimshot'||t.id==='rimShotTight');
+    // Kick: classic Premier 2-step with ghost
+    if(ki>=0){p[ki][0]=p[ki][2]=p[ki][8]=p[ki][9]=p[ki][12]=1;}
+    // Snare: 2 and 4 strictly
+    if(si>=0){p[si][4]=p[si][12]=1;}
+    // Hi-hat: 16th swung
+    if(hi>=0){[0,2,4,5,6,8,10,12,13,14].forEach(i=>{if(i<STEPS)p[hi][i]=1;});}
+    // Open hat on the and
+    if(ho>=0){p[ho][7]=p[ho][15]=1;}
+    // Moog bass: syncopated
+    if(bi>=0){p[bi][0]=p[bi][3]=p[bi][6]=p[bi][8]=p[bi][11]=1;}
+    // Piano chop: off-beat stabs
+    if(pi>=0){p[pi][2]=p[pi][6]=p[pi][10]=p[pi][14]=1;}
+    // Rimshot ghost
+    if(ri>=0){p[ri][6]=p[ri][13]=1;}
+    return p;},
+
+  // RZA / Wu-Tang — grimy, gritty, dark
+  'Wu-Tang Grimy':()=>{const p=blank();
+    const ki=TRACKS.findIndex(t=>t.id==='kickSP1200'||t.id==='kickHard');
+    const si=TRACKS.findIndex(t=>t.id==='snare90s'||t.id==='snareTight');
+    const hi=TRACKS.findIndex(t=>t.id==='hihatSP'||t.id==='hihatC');
+    const bi=TRACKS.findIndex(t=>t.id==='subRumble'||t.id==='bass808Deep');
+    const oi=TRACKS.findIndex(t=>t.id==='organStab90s'||t.id==='jazzChord');
+    const vi=TRACKS.findIndex(t=>t.id==='vinylCrackle');
+    const cli=TRACKS.findIndex(t=>t.id==='clap90s'||t.id==='clap');
+    // Heavy kick: syncopated, dark
+    if(ki>=0){p[ki][0]=p[ki][3]=p[ki][8]=p[ki][11]=p[ki][14]=1;}
+    // Snare on 2+4, slight ghost
+    if(si>=0){p[si][4]=p[si][9]=p[si][12]=1;}
+    // Hi-hat: gapped, swung feel
+    if(hi>=0){[0,4,6,8,12,14].forEach(i=>{if(i<STEPS)p[hi][i]=1;});}
+    // Sub rumble: deep and sparse
+    if(bi>=0){p[bi][0]=p[bi][8]=p[bi][12]=1;}
+    // Organ stab: eerie, sporadic
+    if(oi>=0){p[oi][0]=p[oi][5]=p[oi][10]=1;}
+    // Vinyl crackle: every beat
+    if(vi>=0){for(let i=0;i<STEPS;i+=4)p[vi][i]=1;}
+    // Clap: off-beat slap
+    if(cli>=0){p[cli][6]=p[cli][14]=1;}
+    return p;},
+
+  // Pete Rock & CL Smooth — soulful, sampled
+  'Pete Rock Soul':()=>{const p=blank();
+    const ki=TRACKS.findIndex(t=>t.id==='kickSP1200'||t.id==='boomBapKick');
+    const si=TRACKS.findIndex(t=>t.id==='snare90s'||t.id==='boomBapSnare');
+    const hi=TRACKS.findIndex(t=>t.id==='hihatSP'||t.id==='hihatClosed'||t.id==='hihatC');
+    const bi=TRACKS.findIndex(t=>t.id==='slapBass'||t.id==='moogBass');
+    const ri=TRACKS.findIndex(t=>t.id==='dustyRhodes'||t.id==='rhodesEP');
+    const sfi=TRACKS.findIndex(t=>t.id==='soulFlip'||t.id==='soulChop');
+    const hi2=TRACKS.findIndex(t=>t.id==='hihatOpen90s'||t.id==='hihatO');
+    // Kick: laid back, just before beat
+    if(ki>=0){p[ki][0]=p[ki][2]=p[ki][10]=p[ki][13]=1;}
+    // Snare: 2+4 solid
+    if(si>=0){p[si][4]=p[si][12]=1;}
+    // Hi-hat: mostly 8ths, swung
+    if(hi>=0){[0,2,4,6,8,10,12,14].forEach(i=>{if(i<STEPS)p[hi][i]=1;});}
+    // Open hat accent
+    if(hi2>=0){p[hi2][3]=p[hi2][11]=1;}
+    // Slap bass: groove
+    if(bi>=0){p[bi][0]=p[bi][3]=p[bi][5]=p[bi][8]=p[bi][12]=1;}
+    // Rhodes chop: the hook
+    if(ri>=0){p[ri][0]=p[ri][4]=p[ri][8]=p[ri][12]=1;}
+    // Soul flip: texture
+    if(sfi>=0){p[sfi][2]=p[sfi][6]=p[sfi][10]=p[sfi][14]=1;}
+    return p;},
+
+  // Dr. Dre G-Funk — long, smooth, west coast
+  'G-Funk West':()=>{const p=blank();
+    const ki=TRACKS.findIndex(t=>t.id==='kick'||t.id==='kickTape');
+    const si=TRACKS.findIndex(t=>t.id==='snare90s'||t.id==='snare');
+    const hi=TRACKS.findIndex(t=>t.id==='hihatSP'||t.id==='hihatC');
+    const bi=TRACKS.findIndex(t=>t.id==='moogBass'||t.id==='bassWobble');
+    const sri=TRACKS.findIndex(t=>t.id==='sitarPluck'||t.id==='fluteAtmos');
+    const subi=TRACKS.findIndex(t=>t.id==='subRumble'||t.id==='sub');
+    const shi=TRACKS.findIndex(t=>t.id==='shaker');
+    // Four-on-the-floor with G-funk kick pattern
+    if(ki>=0){p[ki][0]=p[ki][3]=p[ki][6]=p[ki][8]=p[ki][11]=p[ki][14]=1;}
+    // Snare: 2+4, plus ghost on 3.5
+    if(si>=0){p[si][4]=p[si][7]=p[si][12]=1;}
+    // Hi-hat: busy 16ths
+    if(hi>=0){for(let i=0;i<STEPS;i+=1)p[hi][i]=1;}
+    // Moog bass: long, swooping
+    if(bi>=0){p[bi][0]=p[bi][2]=p[bi][4]=p[bi][8]=p[bi][10]=p[bi][12]=1;}
+    // Sitar/flute: melodic hook
+    if(sri>=0){p[sri][0]=p[sri][4]=p[sri][6]=p[sri][8]=p[sri][12]=1;}
+    // Sub: foundation
+    if(subi>=0){p[subi][0]=p[subi][8]=1;}
+    // Shaker: 8th groove
+    if(shi>=0){for(let i=0;i<STEPS;i+=2)p[shi][i]=1;}
+    return p;},
+
+  // Nas / Large Professor — dark, hard, NY
+  'Illmatic Dark':()=>{const p=blank();
+    const ki=TRACKS.findIndex(t=>t.id==='kickSP1200'||t.id==='kickHard');
+    const si=TRACKS.findIndex(t=>t.id==='snare90s'||t.id==='boomBapSnare');
+    const hi=TRACKS.findIndex(t=>t.id==='hihatSP'||t.id==='hihatC');
+    const bi=TRACKS.findIndex(t=>t.id==='subRumble'||t.id==='bass808Deep');
+    const sti=TRACKS.findIndex(t=>t.id==='stringHit90s'||t.id==='stringPad');
+    const hi2=TRACKS.findIndex(t=>t.id==='hornStab90s'||t.id==='brassStab');
+    const cli=TRACKS.findIndex(t=>t.id==='clap90s'||t.id==='clap');
+    // Kick: hard, deliberate
+    if(ki>=0){p[ki][0]=p[ki][4]=p[ki][9]=p[ki][12]=1;}
+    // Snare: authoritative 2+4
+    if(si>=0){p[si][4]=p[si][12]=1;}
+    // Hi-hat: sparse, tough
+    if(hi>=0){[0,3,4,8,11,12].forEach(i=>{if(i<STEPS)p[hi][i]=1;});}
+    // Sub: heavy
+    if(bi>=0){p[bi][0]=p[bi][3]=p[bi][8]=p[bi][11]=1;}
+    // String hit: dramatic
+    if(sti>=0){p[sti][0]=p[sti][8]=1;}
+    // Horn stab: punchy accent
+    if(hi2>=0){p[hi2][6]=p[hi2][14]=1;}
+    // Clap layer on snare
+    if(cli>=0){p[cli][4]=p[cli][12]=1;}
+    return p;},
+
+  // J Dilla — off-grid, drunk drums, MPC feel
+  'J Dilla Drunk':()=>{const p=blank();
+    const ki=TRACKS.findIndex(t=>t.id==='kickSP1200'||t.id==='boomBapKick');
+    const si=TRACKS.findIndex(t=>t.id==='snare90s'||t.id==='boomBapSnare');
+    const hi=TRACKS.findIndex(t=>t.id==='hihatSP'||t.id==='hihatC');
+    const bi=TRACKS.findIndex(t=>t.id==='dustyRhodes'||t.id==='rhodesEP');
+    const sfi=TRACKS.findIndex(t=>t.id==='soulFlip'||t.id==='lofiChop');
+    const rimi=TRACKS.findIndex(t=>t.id==='rimshot');
+    const vi=TRACKS.findIndex(t=>t.id==='vinylCrackle');
+    // Dilla kick: deliberately off — early/late feels
+    if(ki>=0){p[ki][0]=p[ki][5]=p[ki][7]=p[ki][9]=p[ki][13]=1;}
+    // Snare: lazy, slightly behind beat
+    if(si>=0){p[si][3]=p[si][11]=1;}
+    // Hi-hat: drunk 16ths, intentional gaps
+    if(hi>=0){[0,1,3,4,6,8,9,11,13,14].forEach(i=>{if(i<STEPS)p[hi][i]=1;});}
+    // Rhodes/soul chop: the sample
+    if(bi>=0){p[bi][0]=p[bi][2]=p[bi][4]=p[bi][6]=p[bi][8]=p[bi][10]=p[bi][12]=p[bi][14]=1;}
+    // Soul flip: complementary chop
+    if(sfi>=0){p[sfi][1]=p[sfi][5]=p[sfi][9]=p[sfi][13]=1;}
+    // Rimshot: ghost hits
+    if(rimi>=0){p[rimi][7]=p[rimi][12]=1;}
+    // Vinyl crackle throughout
+    if(vi>=0){for(let i=0;i<STEPS;i+=2)p[vi][i]=1;}
+    return p;},
+
+  // Timbaland 90s — hi-hats everywhere, eastern flavors
+  'Timbaland Era':()=>{const p=blank();
+    const ki=TRACKS.findIndex(t=>t.id==='kick'||t.id==='kickTape');
+    const si=TRACKS.findIndex(t=>t.id==='snare90s'||t.id==='snare');
+    const hi=TRACKS.findIndex(t=>t.id==='hihatSP'||t.id==='hihatClosed'||t.id==='hihatC');
+    const ho=TRACKS.findIndex(t=>t.id==='hihatOpen90s'||t.id==='hihatO');
+    const bi=TRACKS.findIndex(t=>t.id==='moogBass'||t.id==='bass808');
+    const sti=TRACKS.findIndex(t=>t.id==='sitarPluck'||t.id==='fluteAtmos');
+    const cli=TRACKS.findIndex(t=>t.id==='clap90s'||t.id==='snapBass');
+    const tabi=TRACKS.findIndex(t=>t.id==='tabla');
+    // Kick: driving, forward
+    if(ki>=0){p[ki][0]=p[ki][3]=p[ki][8]=p[ki][10]=p[ki][13]=1;}
+    // Snare: 2+4 + syncopation
+    if(si>=0){p[si][4]=p[si][7]=p[si][12]=1;}
+    // Hi-hat: constant 16ths (Timbo signature)
+    if(hi>=0){for(let i=0;i<STEPS;i++)p[hi][i]=1;}
+    // Open hat accents
+    if(ho>=0){p[ho][2]=p[ho][6]=p[ho][14]=1;}
+    // Bass: rhythmic, locked
+    if(bi>=0){p[bi][0]=p[bi][2]=p[bi][4]=p[bi][8]=p[bi][10]=p[bi][12]=1;}
+    // Sitar: eastern melody
+    if(sti>=0){p[sti][0]=p[sti][3]=p[sti][6]=p[sti][8]=p[sti][11]=1;}
+    // Tabla: percussion texture
+    if(tabi>=0){p[tabi][1]=p[tabi][5]=p[tabi][9]=p[tabi][13]=1;}
+    // Clap/snap: accent
+    if(cli>=0){p[cli][4]=p[cli][12]=1;}
+    return p;},
+
+  // Big L / Showbiz — hard NY, sparse but deadly
+  'Harlem Hard':()=>{const p=blank();
+    const ki=TRACKS.findIndex(t=>t.id==='kickSP1200'||t.id==='kickHard');
+    const si=TRACKS.findIndex(t=>t.id==='snare90s'||t.id==='boomBapSnare');
+    const hi=TRACKS.findIndex(t=>t.id==='hihatSP'||t.id==='hihatC');
+    const bi=TRACKS.findIndex(t=>t.id==='moogBass'||t.id==='bassPluck');
+    const hi2=TRACKS.findIndex(t=>t.id==='hornStab90s'||t.id==='horniSection');
+    const rimi=TRACKS.findIndex(t=>t.id==='rimshot'||t.id==='rimShotTight');
+    const subi=TRACKS.findIndex(t=>t.id==='subRumble'||t.id==='sub');
+    // Kick: hard, sparse — makes space for the bars
+    if(ki>=0){p[ki][0]=p[ki][6]=p[ki][8]=p[ki][14]=1;}
+    // Snare: crisp, authoritative
+    if(si>=0){p[si][4]=p[si][12]=1;}
+    // Hi-hat: deliberate, tough 8ths
+    if(hi>=0){for(let i=0;i<STEPS;i+=2)p[hi][i]=1;}
+    // Moog: heavy groove
+    if(bi>=0){p[bi][0]=p[bi][4]=p[bi][7]=p[bi][8]=p[bi][12]=1;}
+    // Horn stab: aggressive accents
+    if(hi2>=0){p[hi2][2]=p[hi2][10]=1;}
+    // Rimshot: ghost
+    if(rimi>=0){p[rimi][3]=p[rimi][11]=1;}
+    // Sub: deep
+    if(subi>=0){p[subi][0]=p[subi][8]=1;}
+    return p;},
+
 };
 function blank(){return TRACKS.map(()=>Array(STEPS).fill(0));}
 
@@ -2590,8 +3333,11 @@ function schedNote(step,time){
     const prm={...tr.params,volume:vol};
     let nt=time;
     if(step%2===1&&swingAmt>0)nt+=((60/bpm)/4)*swingAmt*0.5;
-    if(tr.sound==='userSample')S.userSample(nt,prm,sampleBufs[tr.id]);
-    else S[tr.sound]?.(nt,prm);
+    if(tr.sound==='userSample'){
+      const sbuf = sampleBufs[tr.id];
+      if(!sbuf) console.warn('schedNote: sampleBufs['+tr.id+'] is undefined! Track:', tr.label);
+      S.userSample(nt,prm,sbuf);
+    } else S[tr.sound]?.(nt,prm);
   });
 }
 function scheduler(){
@@ -2695,7 +3441,7 @@ function buildGrid(){
     lbl.dataset.track=ti;
     lbl.style.setProperty('--tc',tr.color);
     lbl.title=`Click to preview ${tr.label}`;
-    lbl.innerHTML=`<span class="tlbl-emoji">${tr.emoji}</span><span class="tlbl-name">${tr.label}</span><div class="tlbl-acts"><button class="mbtn" data-t="${ti}">M</button><button class="sbtn" data-t="${ti}">S</button></div>`;
+    lbl.innerHTML=`<span class="tlbl-emoji">${tr.emoji}</span><span class="tlbl-name">${tr.label}</span><div class="tlbl-acts"><button class="mbtn" data-t="${ti}">M</button><button class="sbtn" data-t="${ti}">S</button><button class="xbtn" data-t="${ti}" title="Remove track">✕</button></div>`;
     if(tr.sound==='userSample'){
       const ub=document.createElement('button');ub.className='upload-btn';ub.textContent='📁';ub.title='Upload';
       ub.addEventListener('click',e=>{e.stopPropagation();const inp=document.createElement('input');inp.type='file';inp.accept='audio/*';inp.onchange=async ev=>{const f=ev.target.files[0];if(!f)return;initAudio();try{sampleBufs[tr.id]=await loadSample(f);ub.textContent='✅';showToast(`"${f.name}" loaded`);}catch{showToast('Failed to load',true);}};inp.click();});
@@ -2735,6 +3481,7 @@ function buildGrid(){
   // Mute/solo
   document.querySelectorAll('.mbtn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const ti=+e.target.dataset.t;trackMutes[ti]=!trackMutes[ti];b.classList.toggle('active',trackMutes[ti]);}));
   document.querySelectorAll('.sbtn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const ti=+e.target.dataset.t;trackSolos[ti]=!trackSolos[ti];b.classList.toggle('active',trackSolos[ti]);}));
+  document.querySelectorAll('.xbtn').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();removeTrack(+e.target.dataset.t);}));
 
   // Sync left/right scroll vertically
   const seqLeft=document.getElementById('seq-left');
@@ -2772,12 +3519,11 @@ function toggleStep(ti,s,btn){
   btn.style.opacity=pattern[ti][s]?velocities[ti][s]/100*.5+.5:'';
   
   // Only play sound for non-audio tracks if needed (optional)
-  if (!TRACKS[ti].params?.isAudioRecording) {
-    initAudio();resumeAC();
-    const tr=TRACKS[ti];const vol=masterVol*(tr.params.volume||1)*(velocities[ti][s]/100);
-    if(tr.sound==='userSample')S.userSample(AC.currentTime,{...tr.params,volume:vol},sampleBufs[tr.id]);
-    else S[tr.sound]?.(AC.currentTime,{...tr.params,volume:vol});
-  }
+  // Play preview on step toggle for ALL tracks including audio recordings
+  initAudio(); resumeAC();
+  const tr2=TRACKS[ti]; const vol2=masterVol*(tr2.params.volume||1)*(velocities[ti][s]/100);
+  if(tr2.sound==='userSample') S.userSample(AC.currentTime,{...tr2.params,volume:vol2},sampleBufs[tr2.id]);
+  else S[tr2.sound]?.(AC.currentTime,{...tr2.params,volume:vol2});
 }
 function cycleVel(ti,s,btn){
   if(!pattern[ti][s])return;
@@ -2790,6 +3536,20 @@ function refreshGrid(){
     btn.classList.toggle('on',on);btn.style.opacity=on?velocities[ti][s]/100*.5+.5:'';
   });
 }
+// ── Remove a track from the sequencer ──
+function removeTrack(ti){
+  if(TRACKS.length<=1){ showToast('Need at least one track',true); return; }
+  const name=TRACKS[ti]?.label||'Track';
+  TRACKS.splice(ti,1);
+  pattern.splice(ti,1);
+  velocities.splice(ti,1);
+  trackMutes.splice(ti,1);
+  trackSolos.splice(ti,1);
+  buildGrid();
+  refreshGrid();
+  showToast('🗑 Removed: '+name);
+}
+
 function changeSteps(n){
   STEPS=n;
   pattern=TRACKS.map((_,ti)=>{const o=pattern[ti]||[];const a=Array(STEPS).fill(0);for(let i=0;i<Math.min(o.length,STEPS);i++)a[i]=o[i];return a;});
@@ -3464,6 +4224,7 @@ function switchView(tab){
   document.getElementById('view-piano').style.display=tab==='piano'?'flex':'none';
   document.getElementById('view-drums').style.display=tab==='drums'?'flex':'none';
   document.getElementById('view-guitar').style.display=tab==='guitar'?'flex':'none';
+  document.getElementById('view-vocal').style.display=tab==='vocal'?'flex':'none';
 }
 document.querySelectorAll('.mode-tab').forEach(t=>t.addEventListener('click',()=>{
   const tabName = t.dataset.tab;
@@ -3473,8 +4234,10 @@ document.querySelectorAll('.mode-tab').forEach(t=>t.addEventListener('click',()=
   document.getElementById('view-piano').style.display=tabName==='piano'?'flex':'none';
   document.getElementById('view-drums').style.display=tabName==='drums'?'flex':'none';
   document.getElementById('view-guitar').style.display=tabName==='guitar'?'flex':'none';
+  document.getElementById('view-vocal').style.display=tabName==='vocal'?'flex':'none';
   if(tabName==='beat-maker') buildBeatMaker();
   if(tabName==='guitar') buildGuitar();
+  if(tabName==='vocal') initVocalStudio();
 }));
 
 // Piano recording variables
@@ -3972,10 +4735,85 @@ voiceBtn.addEventListener('click',async()=>{
 document.getElementById('mic-gain').addEventListener('input',e=>{setMicVol(+e.target.value/100);document.getElementById('mic-gain-val').textContent=`${e.target.value}%`;});
 
 // Presets
-document.querySelectorAll('.pbtn').forEach(b=>b.addEventListener('click',()=>{const fn=PRESETS[b.dataset.p];if(fn){pattern=fn();velocities=TRACKS.map(()=>Array(STEPS).fill(100));refreshGrid();showToast(`Loaded: ${b.dataset.p}`);}}));
+// ── loadPreset: builds required tracks from AVAILABLE_TRACKS, applies pattern ──
+function loadPreset(name){
+  const fn = PRESETS[name];
+  if(!fn){ showToast('Preset not found: '+name, true); return; }
+
+  // Step 1: temporarily point TRACKS at AVAILABLE_TRACKS so findIndex works,
+  //         and set STEPS=16 so blank() creates 16-step rows.
+  const savedTRACKS = TRACKS;
+  const savedSTEPS  = STEPS;
+  TRACKS = AVAILABLE_TRACKS;
+  STEPS  = 16;
+
+  let rawPattern;
+  try { rawPattern = fn(); } catch(e){ TRACKS=savedTRACKS; STEPS=savedSTEPS; showToast('Preset error',true); return; }
+
+  // Restore immediately — we have what we need
+  TRACKS = savedTRACKS;
+  STEPS  = 16; // keep 16 for the new layout
+
+  // Step 2: collect which AVAILABLE_TRACKS rows actually have notes
+  const newTracks     = [];
+  const newPattern    = [];
+  const newVelocities = [];
+  const seenIds       = new Set();
+
+  rawPattern.forEach((row, avIdx) => {
+    if(!row || !row.some(Boolean)) return;          // empty row — skip
+    const tr = AVAILABLE_TRACKS[avIdx];
+    if(!tr || seenIds.has(tr.id)) return;           // missing or duplicate
+    seenIds.add(tr.id);
+    newTracks.push(tr);
+    newPattern.push(row.slice(0, 16));
+    newVelocities.push(Array(16).fill(100));
+  });
+
+  if(!newTracks.length){ showToast('Preset has no active tracks', true); return; }
+
+  // Step 3: preserve any user recordings already in the sequencer
+  savedTRACKS.forEach(tr => {
+    if((tr.group === 'AUDIO RECORDINGS' || tr.sound === 'userSample') && !seenIds.has(tr.id)){
+      seenIds.add(tr.id);
+      newTracks.push(tr);
+      newPattern.push(Array(16).fill(0));
+      newVelocities.push(Array(16).fill(100));
+    }
+  });
+
+  // Step 4: commit everything
+  TRACKS     = newTracks;
+  pattern    = newPattern;
+  velocities = newVelocities;
+  trackMutes = TRACKS.map(() => false);
+  trackSolos = TRACKS.map(() => false);
+
+  // Update step-count buttons to reflect 16
+  document.querySelectorAll('.steps-btn').forEach(b => b.classList.toggle('active', +b.dataset.steps === 16));
+
+  buildGrid();
+  refreshGrid();
+
+  // Highlight the active preset button
+  document.querySelectorAll('.pbtn').forEach(b => {
+    const active = b.dataset.p === name;
+    b.style.background  = active ? 'rgba(159,0,255,.55)' : '';
+    b.style.borderColor = active ? 'var(--purple-bright)' : '';
+    b.style.color       = active ? '#fff' : '';
+    b.style.boxShadow   = active ? '0 0 10px rgba(159,0,255,.5)' : '';
+  });
+
+  showToast('🎚️ '+name+' — '+newTracks.length+' tracks loaded');
+}
+
+document.querySelectorAll('.pbtn').forEach(b=>b.addEventListener('click',()=>loadPreset(b.dataset.p)));
 document.querySelectorAll('.patbtn').forEach(b=>b.addEventListener('click',()=>{patterns[activePat]=pattern.map(r=>[...r]);activePat=b.dataset.pat;pattern=patterns[activePat]||TRACKS.map(()=>Array(STEPS).fill(0));refreshGrid();document.querySelectorAll('.patbtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');showToast(`Pattern ${activePat}`);}));
 
 // Help
+document.getElementById('btn-about').addEventListener('click',()=>document.getElementById('about-modal').classList.add('open'));
+document.getElementById('close-about').addEventListener('click',()=>document.getElementById('about-modal').classList.remove('open'));
+document.getElementById('about-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('open');});
 document.getElementById('btn-help').addEventListener('click',()=>document.getElementById('help-modal').classList.add('open'));
 document.getElementById('close-help').addEventListener('click',()=>document.getElementById('help-modal').classList.remove('open'));
 document.getElementById('help-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('open');});
@@ -3985,22 +4823,33 @@ document.getElementById('help-modal').addEventListener('click',e=>{if(e.target==
 //  AUTH + EXPORT + PAYWALL SYSTEM
 // ═══════════════════════════════════════════════
 
-// ── User state (persisted in localStorage) ──
+// ══════════════════════════════════════════════════
+//  AUTH — Firebase + localStorage fallback
+// ══════════════════════════════════════════════════
 let currentUser = null;
-const loginModal    = document.getElementById('login-modal');
-const paywallModal  = document.getElementById('paywall-modal');
-const exportModal   = document.getElementById('export-modal');
+const loginModal   = document.getElementById('login-modal');
+const paywallModal = document.getElementById('paywall-modal');
+const exportModal  = document.getElementById('export-modal');
 
-// Load saved session
+// ── Firebase login/logout callbacks (set by Firebase module) ──
+window.onFbLogin = function(user){
+  saveUser(user);
+  loginModal.classList.remove('open');
+  updateLoginButton();
+  checkPaymentStatus();
+  showToast('👋 Welcome back, '+user.name+'!');
+  startFreeCountdown();
+};
+window.onFbLogout = function(){
+  clearUser();
+  updateLoginButton();
+};
+
+// ── Restore session from localStorage (instant — Firebase confirms async) ──
 (function restoreSession(){
   try{
     const saved = localStorage.getItem('gigo_user');
-    if(saved){
-      currentUser = JSON.parse(saved);
-      updateLoginButton();
-      // Check if payment is still valid
-      checkPaymentStatus();
-    }
+    if(saved){ currentUser=JSON.parse(saved); updateLoginButton(); checkPaymentStatus(); }
   }catch(e){}
 })();
 
@@ -4010,97 +4859,151 @@ function isLoggedInUser(){ return currentUser && currentUser.role !== 'guest'; }
 function saveUser(u){ currentUser=u; try{localStorage.setItem('gigo_user',JSON.stringify(u));}catch(e){} }
 function clearUser(){ currentUser=null; try{localStorage.removeItem('gigo_user');}catch(e){} }
 
-// Payment status: stores timestamp of last payment in localStorage
+// ── Payment ──
 function getPaymentExpiry(){ try{ return +localStorage.getItem('gigo_paid_until')||0; }catch(e){return 0;} }
-function setPaymentExpiry(ms){ try{ localStorage.setItem('gigo_paid_until', ms); }catch(e){} }
+function setPaymentExpiry(ms){ try{ localStorage.setItem('gigo_paid_until',ms); }catch(e){} }
 function isPaid(){
-  // First 24h after signup = always free
   if(!currentUser?.createdAt) return false;
-  const age = Date.now() - currentUser.createdAt;
-  if(age < 24*60*60*1000) return true; // within free day
+  if(Date.now()-currentUser.createdAt < 24*60*60*1000) return true;
   return Date.now() < getPaymentExpiry();
 }
 function checkPaymentStatus(){
-  // Show "paid" badge if active
-  const loginBtn = document.getElementById('btn-login');
-  if(isPaid() && isLoggedInUser()){
-    loginBtn.style.borderColor='#00ff88';
-    loginBtn.style.boxShadow='0 0 8px rgba(0,255,136,.4)';
+  const btn=document.getElementById('btn-login');
+  if(isPaid()&&isLoggedInUser()){
+    btn.style.borderColor='#00ff88';
+    btn.style.boxShadow='0 0 8px rgba(0,255,136,.4)';
   }
 }
 function hoursUntilPaywall(){
   if(!currentUser?.createdAt) return 0;
-  const elapsed = (Date.now()-currentUser.createdAt)/(1000*60*60);
-  return Math.max(0, 24-elapsed);
+  return Math.max(0, 24-(Date.now()-currentUser.createdAt)/(1000*60*60));
+}
+
+// ── Firebase sign-in wrappers ──
+async function fbSignIn(email, password){
+  if(!window.fbAuth || !window.fbFns) throw new Error('Firebase not ready');
+  const cred = await window.fbFns.signInWithEmailAndPassword(window.fbAuth, email, password);
+  return cred.user;
+}
+async function fbSignUp(email, password, name){
+  if(!window.fbAuth || !window.fbFns) throw new Error('Firebase not ready');
+  const cred = await window.fbFns.createUserWithEmailAndPassword(window.fbAuth, email, password);
+  // Set display name
+  try{ await window.fbFns.updateProfile(cred.user, {displayName: name}); }catch(e){}
+  // Write to Firestore
+  try{
+    const uRef = window.fbFns.doc(window.fbDB, 'users', cred.user.uid);
+    await window.fbFns.setDoc(uRef, {
+      name, email, role:'user', plan:'free',
+      createdAt: Date.now(), lastSeen: window.fbFns.serverTimestamp()
+    });
+  }catch(e){ console.warn('Firestore write failed:', e); }
+  return cred.user;
+}
+async function fbSignOut(){
+  if(window.fbAuth && window.fbFns) await window.fbFns.signOut(window.fbAuth);
+  clearUser(); updateLoginButton(); showToast('Logged out 👋');
 }
 
 // ── Login modal ──
 document.getElementById('btn-login').addEventListener('click', () => {
   if(currentUser){
-    // Already logged in — show account info / logout
-    if(confirm('Logged out of: ' + currentUser.email + ' — click OK to confirm')){
-      clearUser();
-      updateLoginButton();
-      showToast('Logged out');
-    }
+    if(confirm('Sign out of '+currentUser.email+'?')){ fbSignOut(); }
     return;
   }
   loginModal.classList.add('open');
 });
 
 document.getElementById('btn-guest').addEventListener('click', () => {
-  saveUser({ name:'Guest', email:'guest@gigo.com', role:'guest', createdAt: Date.now() });
+  saveUser({ name:'Guest', email:'guest@gigo.com', role:'guest', createdAt:Date.now() });
   loginModal.classList.remove('open');
   updateLoginButton();
-  showToast('👤 Logged in as Guest — create an account to export');
+  showToast('👤 Guest mode — create an account to export beats');
 });
 
-document.getElementById('btn-login-submit').addEventListener('click', () => {
-  const email    = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
-  if(!email || !password){ showToast('Enter email and password', true); return; }
-  // Simulate real login — swap with Firebase/Supabase later
-  const existing = tryLoadAccount(email, password);
-  if(existing){
-    saveUser(existing);
-    loginModal.classList.remove('open');
-    updateLoginButton();
-    checkPaymentStatus();
-    showToast('👤 Welcome back, '+existing.name+'!');
-  } else {
-    showToast('Account not found. Hit Sign Up to create one.', true);
+// Login button
+document.getElementById('btn-login-submit').addEventListener('click', async () => {
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-password').value;
+  if(!email||!pw){ showToast('Enter email and password',true); return; }
+
+  const btn = document.getElementById('btn-login-submit');
+  btn.textContent='Signing in…'; btn.disabled=true;
+
+  try{
+    if(window.fbAuth && window.fbFns){
+      // Firebase sign in
+      await fbSignIn(email, pw);
+      // onAuthStateChanged → onFbLogin will fire automatically
+    } else {
+      // localStorage fallback (offline / Firebase not configured)
+      const existing = lsLoadAccount(email, pw);
+      if(!existing){ showToast('Account not found — Sign Up first',true); return; }
+      saveUser(existing);
+      loginModal.classList.remove('open');
+      updateLoginButton(); checkPaymentStatus();
+      showToast('👤 Welcome back, '+existing.name+'!');
+    }
+  } catch(err){
+    const msg = err.code === 'auth/user-not-found' ? 'No account found — hit Sign Up'
+              : err.code === 'auth/wrong-password'  ? 'Wrong password'
+              : err.code === 'auth/invalid-credential' ? 'Email or password incorrect'
+              : err.message;
+    showToast('❌ '+msg, true);
+  } finally {
+    btn.textContent='Login'; btn.disabled=false;
   }
 });
 
-document.getElementById('btn-signup').addEventListener('click', () => {
-  const email    = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
-  if(!email || !password){ showToast('Enter email and password to sign up', true); return; }
-  const user = { name: email.split('@')[0], email, role:'user', createdAt: Date.now() };
-  storeAccount(email, password, user);
-  saveUser(user);
-  loginModal.classList.remove('open');
-  updateLoginButton();
-  showToast('🎉 Account created! First 24h is FREE — enjoy!');
-  // Show free day countdown in button
-  startFreeCountdown();
+// Sign up button
+document.getElementById('btn-signup').addEventListener('click', async () => {
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-password').value;
+  if(!email||!pw){ showToast('Enter email and password',true); return; }
+  if(pw.length < 6){ showToast('Password must be at least 6 characters',true); return; }
+
+  const btn = document.getElementById('btn-signup');
+  btn.textContent='Creating…'; btn.disabled=true;
+
+  const name = email.split('@')[0];
+  try{
+    if(window.fbAuth && window.fbFns){
+      await fbSignUp(email, pw, name);
+      // onAuthStateChanged fires → onFbLogin handles rest
+    } else {
+      // localStorage fallback
+      const user = { name, email, role:'user', createdAt:Date.now() };
+      lsSaveAccount(email, pw, user);
+      saveUser(user);
+      loginModal.classList.remove('open');
+      updateLoginButton();
+      showToast('🎉 Account created! First 24h free — enjoy!');
+      startFreeCountdown();
+    }
+  } catch(err){
+    const msg = err.code === 'auth/email-already-in-use' ? 'Email already registered — try Login'
+              : err.code === 'auth/weak-password' ? 'Password too weak (6+ chars needed)'
+              : err.message;
+    showToast('❌ '+msg, true);
+  } finally {
+    btn.textContent='Sign Up'; btn.disabled=false;
+  }
 });
 
-// Simple local account store (replace with real backend later)
-function storeAccount(email, pw, user){
+// ── localStorage account fallback (works when Firebase not configured) ──
+function lsSaveAccount(email, pw, user){
   try{
-    const accounts = JSON.parse(localStorage.getItem('gigo_accounts')||'{}');
-    accounts[email] = { pw, user };
-    localStorage.setItem('gigo_accounts', JSON.stringify(accounts));
+    const a=JSON.parse(localStorage.getItem('gigo_accounts')||'{}');
+    a[email]={pw,user};
+    localStorage.setItem('gigo_accounts',JSON.stringify(a));
   }catch(e){}
 }
-function tryLoadAccount(email, pw){
+function lsLoadAccount(email, pw){
   try{
-    const accounts = JSON.parse(localStorage.getItem('gigo_accounts')||'{}');
-    const rec = accounts[email];
-    if(rec && rec.pw===pw) return rec.user;
-  }catch(e){}
-  return null;
+    const a=JSON.parse(localStorage.getItem('gigo_accounts')||'{}');
+    const r=a[email];
+    return (r&&r.pw===pw)?r.user:null;
+  }catch(e){return null;}
 }
 
 function updateLoginButton(){
@@ -4177,7 +5080,7 @@ document.getElementById('paypal-manual-btn').addEventListener('click', ()=>{
 
 function openPayPalPayment(){
   // PayPal.me link — replace YOUR_PAYPAL with your actual PayPal.me username
-  const PAYPAL_ME = 'https://www.paypal.com/paypalme/YOURUSERNAME/1';
+  const PAYPAL_ME = 'https://www.paypal.com/paypalme/diorarlone/1';
   // Open PayPal in new window
   const win = window.open(PAYPAL_ME, '_blank', 'width=500,height=700');
   // Poll for window close = assume payment done
@@ -4911,6 +5814,644 @@ function addBeatToSequencer(trackData) {
   buildGrid();
   refreshGrid();
 }
+
+
+// ══════════════════════════════════════════════════════
+//  VOCAL TUNE STUDIO
+// ══════════════════════════════════════════════════════
+
+let vtState = 'idle';           // idle | recording | processing | done
+let vtMicStream = null;
+let vtMediaRec  = null;
+let vtChunks    = [];
+let vtRawBlob   = null;         // unprocessed mic recording
+let vtProcessedBlob = null;     // after effects applied
+let vtTimerIv   = null;
+let vtTimerSecs = 0;
+let vtVizAf     = null;         // animation frame for waveform
+let vtAnalyser  = null;
+let vtRecordings = [];          // [{name, rawBlob, processedBlob, processedUrl, char, pitch}]
+let vtVocalInitDone = false;
+
+// Voice character presets: {lo, hi, gain, dist, ringHz, ringMix}
+const VT_CHARS = {
+  natural:   {lo:80,   hi:12000, presHz:3000,  presGain:3,  satAmt:0,   ringHz:0,    ringMix:0,   gain:1.0},
+  clean:     {lo:120,  hi:14000, presHz:3500,  presGain:6,  satAmt:0,   ringHz:0,    ringMix:0,   gain:1.1},
+  deep:      {lo:40,   hi:4000,  presHz:800,   presGain:5,  satAmt:12,  ringHz:0,    ringMix:0,   gain:1.3},
+  bright:    {lo:200,  hi:16000, presHz:5000,  presGain:10, satAmt:0,   ringHz:0,    ringMix:0,   gain:1.0},
+  robot:     {lo:100,  hi:8000,  presHz:1500,  presGain:4,  satAmt:40,  ringHz:100,  ringMix:.55, gain:0.9},
+  whisper:   {lo:300,  hi:9000,  presHz:4000,  presGain:-3, satAmt:0,   ringHz:0,    ringMix:0,   gain:0.7},
+  telephone: {lo:400,  hi:3400,  presHz:2000,  presGain:4,  satAmt:25,  ringHz:0,    ringMix:0,   gain:1.1},
+  megaphone: {lo:500,  hi:5000,  presHz:1800,  presGain:12, satAmt:60,  ringHz:0,    ringMix:0,   gain:1.4},
+};
+
+let vtCurrentChar = 'natural';
+
+function initVocalStudio(){
+  if(vtVocalInitDone) return;
+  vtVocalInitDone = true;
+
+  // Slider labels
+  const pitchSlider  = document.getElementById('vt-pitch');
+  const fineSlider   = document.getElementById('vt-fine');
+  const reverbSlider = document.getElementById('vt-reverb');
+  const warmthSlider = document.getElementById('vt-warmth');
+  const airSlider    = document.getElementById('vt-air');
+
+  pitchSlider.addEventListener('input', ()=>{
+    const v = +pitchSlider.value;
+    document.getElementById('vt-pitch-lbl').textContent = (v>=0?'+':'')+v+'st';
+  });
+  fineSlider.addEventListener('input', ()=>{
+    const v = +fineSlider.value;
+    document.getElementById('vt-fine-lbl').textContent = (v>=0?'+':'')+v+'¢';
+  });
+  reverbSlider.addEventListener('input', ()=>{
+    document.getElementById('vt-reverb-lbl').textContent = reverbSlider.value+'%';
+  });
+  warmthSlider.addEventListener('input', ()=>{
+    document.getElementById('vt-warmth-lbl').textContent = warmthSlider.value+'%';
+  });
+  airSlider.addEventListener('input', ()=>{
+    document.getElementById('vt-air-lbl').textContent = airSlider.value+'%';
+  });
+
+  // Character buttons — select + highlight + auto-reprocess if recording exists
+  document.querySelectorAll('.vt-char-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      vtCurrentChar = btn.dataset.char;
+      document.querySelectorAll('.vt-char-btn').forEach(b=>{
+        const active = b.dataset.char === vtCurrentChar;
+        b.style.background  = active ? 'rgba(159,0,255,.3)'   : 'var(--bg-deeper)';
+        b.style.borderColor = active ? 'var(--purple-bright)' : 'var(--border)';
+        b.style.color       = active ? '#fff'                 : 'var(--text-muted)';
+        b.style.boxShadow   = active ? '0 0 8px rgba(159,0,255,.4)' : '';
+        b.style.fontWeight  = active ? '700' : '400';
+      });
+      // Auto-reprocess if we have a raw recording waiting
+      if(vtRawBlob && vtState !== 'recording' && vtState !== 'processing'){
+        showToast('🔄 Applying "'+vtCurrentChar+'" to your vocal…');
+        vtState = 'processing';
+        vtUpdateUI();
+        vtProcessRecording();
+      }
+    });
+  });
+
+  // Record button
+  document.getElementById('vt-record-btn').addEventListener('click', vtToggleRecord);
+
+  // Process button
+  document.getElementById('vt-apply-btn').addEventListener('click', vtProcessLast);
+
+  // Add to sequencer button
+  document.getElementById('vt-add-seq-btn').addEventListener('click', vtAddLastToSeq);
+}
+
+async function vtToggleRecord(){
+  await initAudio(); await resumeAC();
+  if(vtState === 'recording'){
+    vtStopRecord();
+  } else {
+    vtStartRecord();
+  }
+}
+
+async function vtStartRecord(){
+  try {
+    vtMicStream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,sampleRate:48000}});
+  } catch(e) {
+    showToast('🎤 Mic permission denied. Check browser settings.', true);
+    return;
+  }
+  vtChunks = []; vtRawBlob = null; vtProcessedBlob = null;
+  vtState = 'recording';
+
+  // Waveform visualiser
+  const src = AC.createMediaStreamSource(vtMicStream);
+  vtAnalyser = AC.createAnalyser();
+  vtAnalyser.fftSize = 256;
+  src.connect(vtAnalyser);
+  vtDrawWaveform();
+
+  // Record raw mic
+  const mime = ['audio/webm;codecs=opus','audio/webm','audio/ogg',''].find(m=>{try{return MediaRecorder.isTypeSupported(m);}catch{return false;}});
+  vtMediaRec = new MediaRecorder(vtMicStream, mime?{mimeType:mime}:{});
+  vtMediaRec.ondataavailable = e=>{ if(e.data?.size>0) vtChunks.push(e.data); };
+  vtMediaRec.onstop = ()=>{
+    vtRawBlob = new Blob(vtChunks, {type: mime||'audio/webm'});
+    vtChunks = [];
+    vtState = 'processing';
+    vtUpdateUI();
+    vtProcessRecording();
+  };
+  vtMediaRec.start(100);
+
+  // UI
+  vtTimerSecs = 0;
+  document.getElementById('vt-timer').style.display='block';
+  vtTimerIv = setInterval(()=>{
+    vtTimerSecs++;
+    const m=Math.floor(vtTimerSecs/60), s=vtTimerSecs%60;
+    document.getElementById('vt-timer').textContent = m+':'+(s<10?'0':'')+s;
+  },1000);
+
+  vtUpdateUI();
+  showToast('🎤 Recording your vocal… sing or rap, then tap STOP');
+}
+
+function vtStopRecord(){
+  if(vtTimerIv){ clearInterval(vtTimerIv); vtTimerIv=null; }
+  if(vtVizAf){ cancelAnimationFrame(vtVizAf); vtVizAf=null; }
+  if(vtMediaRec && vtMediaRec.state==='recording'){
+    vtMediaRec.requestData();
+    setTimeout(()=>vtMediaRec.stop(), 80);
+  }
+  if(vtMicStream){ vtMicStream.getTracks().forEach(t=>t.stop()); vtMicStream=null; }
+  vtState = 'stopping';
+  vtUpdateUI();
+}
+
+function vtDrawWaveform(){
+  const canvas = document.getElementById('vt-canvas');
+  if(!canvas || !vtAnalyser){ return; }
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const buf = new Uint8Array(vtAnalyser.frequencyBinCount);
+
+  function frame(){
+    if(vtState !== 'recording'){ ctx.clearRect(0,0,W,H); return; }
+    vtVizAf = requestAnimationFrame(frame);
+    vtAnalyser.getByteTimeDomainData(buf);
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle = '#9F00FF';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    const step = W / buf.length;
+    buf.forEach((v,i)=>{
+      const y = (v/128)*H/2;
+      i===0 ? ctx.moveTo(0,y) : ctx.lineTo(i*step,y);
+    });
+    ctx.stroke();
+    // peak glow
+    const peak = Math.max(...buf)/128;
+    if(peak > 1.02){
+      ctx.strokeStyle = `rgba(255,0,255,${(peak-1)*3})`;
+      ctx.stroke();
+    }
+  }
+  frame();
+}
+
+// ── Core processing ──
+async function vtProcessRecording(){
+  if(!vtRawBlob){ showToast('No recording to process', true); return; }
+  showToast('⚙️ Processing… please wait');
+
+  try {
+    await initAudio(); await resumeAC();
+
+    // 1. Decode raw mic blob with MAIN AudioContext — use fresh copy each time
+    let rawAB;
+    try {
+      const rawBytes = await vtRawBlob.slice(0).arrayBuffer();
+      rawAB = await new Promise((res,rej) => AC.decodeAudioData(rawBytes, res, rej));
+    } catch(decErr) {
+      console.error('Raw decode failed:', decErr);
+      showToast('Could not decode mic recording. Try again.', true);
+      vtState='idle'; vtUpdateUI(); return;
+    }
+
+    const SR         = rawAB.sampleRate;
+    const pitchSt    = +document.getElementById('vt-pitch').value;
+    const fineCents  = +document.getElementById('vt-fine').value;
+    const reverbPct  = +document.getElementById('vt-reverb').value / 100;
+    const warmthPct  = +document.getElementById('vt-warmth').value / 100;
+    const airPct     = +document.getElementById('vt-air').value / 100;
+    const ch         = VT_CHARS[vtCurrentChar] || VT_CHARS.natural;
+
+    const pitchRatio = Math.pow(2, (pitchSt + fineCents/100) / 12);
+    // Clamp ratio to safe range
+    const safeRatio  = Math.max(0.25, Math.min(4.0, pitchRatio));
+
+    // 2. OfflineAudioContext — mono, same SR as recording
+    // Cap at 3 minutes to avoid OOM; add 3s tail for reverb
+    const maxSamples = SR * 180;
+    const outSamples = Math.min(maxSamples, Math.ceil(rawAB.length / safeRatio) + Math.ceil(SR * 3));
+    const off = new OfflineAudioContext(1, outSamples, SR);
+
+    // Source with pitch shift via playbackRate
+    const src = off.createBufferSource();
+    src.buffer = rawAB;
+    src.playbackRate.value = safeRatio;
+
+    // Build EQ chain: HPF → presence → warmth → air → LPF
+    const hpf  = off.createBiquadFilter(); hpf.type='highpass';  hpf.frequency.value=ch.lo;
+    const pres = off.createBiquadFilter(); pres.type='peaking';  pres.frequency.value=ch.presHz; pres.Q.value=1.4; pres.gain.value=ch.presGain;
+    const warm = off.createBiquadFilter(); warm.type='lowshelf'; warm.frequency.value=350;  warm.gain.value=(warmthPct-.5)*16;
+    const air2 = off.createBiquadFilter(); air2.type='highshelf';air2.frequency.value=7000; air2.gain.value=(airPct-.5)*14;
+    const lpf  = off.createBiquadFilter(); lpf.type='lowpass';   lpf.frequency.value=Math.min(ch.hi, SR*0.45);
+
+    src.connect(hpf); hpf.connect(pres); pres.connect(warm); warm.connect(air2); air2.connect(lpf);
+    let tail = lpf;
+
+    // Optional saturation
+    if(ch.satAmt > 0){
+      const ws = off.createWaveShaper();
+      const k=ch.satAmt, n=512, curve=new Float32Array(n);
+      for(let i=0;i<n;i++){const x=i*2/n-1; curve[i]=(Math.PI+k)*x/(Math.PI+k*Math.abs(x));}
+      ws.curve=curve; ws.oversample='2x';
+      tail.connect(ws); tail=ws;
+    }
+
+    // Optional ring mod (robot)
+    if(ch.ringHz>0 && ch.ringMix>0){
+      const osc=off.createOscillator(); osc.frequency.value=ch.ringHz;
+      const rg=off.createGain(); rg.gain.value=ch.ringMix;
+      const dg=off.createGain(); dg.gain.value=1-ch.ringMix;
+      const mx=off.createGain();
+      tail.connect(dg); dg.connect(mx);
+      osc.connect(rg); rg.connect(mx);
+      osc.start(0); tail=mx;
+    }
+
+    // Reverb (convolver with exponential decay IR)
+    const outGain = off.createGain(); outGain.gain.value=ch.gain;
+    if(reverbPct > 0.02){
+      const irLen=Math.ceil(SR*(0.4+reverbPct*2.8));
+      const irBuf=off.createBuffer(1,irLen,SR);
+      const irD=irBuf.getChannelData(0);
+      for(let i=0;i<irLen;i++) irD[i]=(Math.random()*2-1)*Math.exp(-i/(irLen*(0.15+reverbPct*0.5)));
+      const conv=off.createConvolver(); conv.buffer=irBuf;
+      const wetG=off.createGain(); wetG.gain.value=reverbPct*0.55;
+      const dryG=off.createGain(); dryG.gain.value=Math.max(0, 1-reverbPct*0.3);
+      tail.connect(dryG); dryG.connect(outGain);
+      tail.connect(conv); conv.connect(wetG); wetG.connect(outGain);
+    } else {
+      tail.connect(outGain);
+    }
+    outGain.connect(off.destination);
+
+    src.start(0);
+    const rendered = await off.startRendering();
+
+    // 3. Convert AudioBuffer → playable URL using WAV encoding (no MediaRecorder needed)
+    const wavBlob = audioBufferToWav(rendered);
+    const procUrl = URL.createObjectURL(wavBlob);
+
+    vtProcessedBlob = wavBlob;
+
+    // 4. Decode WAV into main AudioContext and store in sampleBufs
+    const recId = 'vt_'+Date.now();
+
+    // Decode in main AC — this is what the sequencer will use
+    let mainDecoded;
+    try {
+      const wavBytes2 = await wavBlob.slice(0).arrayBuffer();
+      mainDecoded = await new Promise((res,rej) => AC.decodeAudioData(wavBytes2, res, rej));
+    } catch(e2) {
+      // WAV decode failed — fallback: use the rendered offline buffer copied into main AC
+      console.warn('WAV decode fallback:', e2);
+      mainDecoded = AC.createBuffer(rendered.numberOfChannels, rendered.length, rendered.sampleRate);
+      for(let ch=0; ch<rendered.numberOfChannels; ch++){
+        mainDecoded.copyToChannel(rendered.getChannelData(ch).slice(), ch);
+      }
+    }
+
+    sampleBufs[recId] = mainDecoded;
+    console.log('VT: sampleBufs['+recId+'] set, duration='+mainDecoded.duration.toFixed(2)+'s');
+
+    // 5. Save take record
+    const n2 = vtRecordings.length + 1;
+    const nm = 'Take '+n2+' · '+vtCurrentChar+(pitchSt!==0?' '+(pitchSt>0?'+':'')+pitchSt+'st':'');
+    const rec = { id:recId, name:nm, rawBlob:vtRawBlob, processedBlob:wavBlob, processedUrl:procUrl,
+                  char:vtCurrentChar, pitch:pitchSt };
+    vtRecordings.push(rec);
+    vtRenderTakeCard(rec, vtRecordings.length-1);
+    console.log('VT: take saved, recId='+recId+', sampleBufs keys='+Object.keys(sampleBufs).filter(k=>k.startsWith('vt_')));
+
+    vtState = 'done';
+    vtUpdateUI();
+    showToast('✅ Done! Hit ▶ to preview or ➕ to add to beat');
+
+  } catch(err){
+    console.error('VT process error', err);
+    showToast('⚠️ Processing failed: '+err.message, true);
+    vtState = 'idle';
+    vtUpdateUI();
+  }
+}
+
+// ── WAV encoder — works everywhere, no MediaRecorder needed ──
+function audioBufferToWav(ab){
+  const numCh=1, SR=ab.sampleRate, samples=ab.getChannelData(0);
+  const buf=new ArrayBuffer(44+samples.length*2);
+  const view=new DataView(buf);
+  const writeStr=(o,s)=>{for(let i=0;i<s.length;i++)view.setUint8(o+i,s.charCodeAt(i));};
+  writeStr(0,'RIFF'); view.setUint32(4,36+samples.length*2,true);
+  writeStr(8,'WAVE'); writeStr(12,'fmt '); view.setUint32(16,16,true);
+  view.setUint16(20,1,true); view.setUint16(22,numCh,true);
+  view.setUint32(24,SR,true); view.setUint32(28,SR*numCh*2,true);
+  view.setUint16(32,numCh*2,true); view.setUint16(34,16,true);
+  writeStr(36,'data'); view.setUint32(40,samples.length*2,true);
+  let off=44;
+  for(let i=0;i<samples.length;i++){
+    const s=Math.max(-1,Math.min(1,samples[i]));
+    view.setInt16(off,s<0?s*0x8000:s*0x7FFF,true); off+=2;
+  }
+  return new Blob([buf],{type:'audio/wav'});
+}
+
+// ── Re-process last raw recording with current settings ──
+async function vtProcessLast(){
+  if(!vtRawBlob){ showToast('Record a vocal first',true); return; }
+  vtState = 'processing';
+  vtUpdateUI();
+  await vtProcessRecording();
+}
+
+// ── Render a take card in the recordings grid ──
+function vtRenderTakeCard(rec, idx){
+  const grid = document.getElementById('vt-recordings-grid');
+  const emptyLbl = document.getElementById('vt-empty-lbl');
+  if(emptyLbl) emptyLbl.remove();
+
+  const card = document.createElement('div');
+  card.style.cssText =
+    'display:flex;flex-direction:column;gap:6px;padding:10px 12px;width:100%;'+
+    'background:rgba(159,0,255,.08);border:1px solid rgba(159,0,255,.22);border-radius:10px;'+
+    'font-size:.72rem;color:var(--text-secondary);box-sizing:border-box';
+
+  // Top row: name + action buttons
+  const topRow = document.createElement('div');
+  topRow.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap';
+
+  const nameSpan = document.createElement('span');
+  nameSpan.style.cssText = 'color:var(--text-primary);font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+  nameSpan.textContent = '🎤 '+(rec.name||'Take '+(idx+1));
+
+  // Play/Stop button
+  const playBtn = document.createElement('button');
+  playBtn.textContent = '▶ Play';
+  playBtn.style.cssText =
+    'padding:4px 12px;background:rgba(0,200,255,.18);border:1px solid rgba(0,200,255,.45);'+
+    'color:#00cfff;border-radius:6px;cursor:pointer;font-size:.7rem;font-weight:700;'+
+    'transition:all .15s;white-space:nowrap;flex-shrink:0';
+
+  // Add button
+  const addBtn = document.createElement('button');
+  addBtn.textContent = '➕ Add to Beat';
+  addBtn.style.cssText =
+    'padding:4px 12px;background:rgba(0,255,100,.14);border:1px solid rgba(0,255,100,.4);'+
+    'color:#00ff88;border-radius:6px;cursor:pointer;font-size:.7rem;font-weight:700;'+
+    'transition:all .15s;white-space:nowrap;flex-shrink:0';
+
+  // Delete button
+  const delBtn = document.createElement('button');
+  delBtn.textContent = '✕';
+  delBtn.title = 'Remove take';
+  delBtn.style.cssText =
+    'padding:4px 7px;background:transparent;border:1px solid transparent;'+
+    'color:var(--text-muted);border-radius:5px;cursor:pointer;font-size:.7rem;'+
+    'transition:all .15s;flex-shrink:0';
+  delBtn.onmouseover = ()=>{ delBtn.style.borderColor='rgba(255,60,60,.5)'; delBtn.style.color='#ff6666'; };
+  delBtn.onmouseout  = ()=>{ delBtn.style.borderColor='transparent'; delBtn.style.color='var(--text-muted)'; };
+
+  topRow.append(nameSpan, playBtn, addBtn, delBtn);
+
+  // Audio progress bar row
+  const progressRow = document.createElement('div');
+  progressRow.style.cssText = 'display:none;align-items:center;gap:8px';
+
+  const progressBar = document.createElement('div');
+  progressBar.style.cssText =
+    'flex:1;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;cursor:pointer';
+  const progressFill = document.createElement('div');
+  progressFill.style.cssText =
+    'height:100%;width:0%;background:linear-gradient(90deg,#9F00FF,#FF00FF);border-radius:2px;transition:width .1s';
+  progressBar.appendChild(progressFill);
+
+  const timeSpan = document.createElement('span');
+  timeSpan.style.cssText = 'font-family:var(--font-display);font-size:.65rem;color:var(--purple-bright);min-width:34px;text-align:right';
+  timeSpan.textContent = '0:00';
+
+  progressRow.append(progressBar, timeSpan);
+
+  card.append(topRow, progressRow);
+
+  // ── Play button logic ──
+  let previewAudio = null;
+  let progIv = null;
+
+  function stopPreview(){
+    if(previewAudio){ previewAudio.pause(); previewAudio.currentTime=0; previewAudio=null; }
+    if(progIv){ clearInterval(progIv); progIv=null; }
+    playBtn.textContent='▶ Play';
+    playBtn.style.background='rgba(0,200,255,.18)';
+    playBtn.style.borderColor='rgba(0,200,255,.45)';
+    progressFill.style.width='0%';
+    timeSpan.textContent='0:00';
+    progressRow.style.display='none';
+  }
+
+  playBtn.addEventListener('click', ()=>{
+    if(previewAudio && !previewAudio.paused){
+      stopPreview(); return;
+    }
+    // Stop any other playing takes
+    document.querySelectorAll('.vt-stop-all').forEach(fn=>fn());
+
+    previewAudio = new Audio(rec.processedUrl);
+    previewAudio.onerror = (e)=>{
+      stopPreview();
+      showToast('Preview error — try adding directly to sequencer', true);
+    };
+    previewAudio.oncanplaythrough = ()=>{
+      previewAudio.play().then(()=>{
+        playBtn.textContent='⏹ Stop';
+        playBtn.style.background='rgba(255,100,0,.2)';
+        playBtn.style.borderColor='rgba(255,100,0,.5)';
+        progressRow.style.display='flex';
+        progIv = setInterval(()=>{
+          if(!previewAudio) return;
+          const pct = previewAudio.duration ? (previewAudio.currentTime/previewAudio.duration)*100 : 0;
+          progressFill.style.width = pct+'%';
+          const s=Math.floor(previewAudio.currentTime), m=Math.floor(s/60);
+          timeSpan.textContent = m+':'+(s%60<10?'0':'')+s%60;
+        }, 100);
+      }).catch(err=>{ stopPreview(); showToast('Cannot play: '+err.message, true); });
+    };
+    previewAudio.onended = stopPreview;
+    // Register stop function for this card
+    card._stopFn = stopPreview;
+  });
+
+  // Register global stop-all hook
+  card.classList.add('vt-card');
+  // Proxy: allow other cards to stop this one
+  const origStop = card._stopFn;
+  Object.defineProperty(card, '_stopFn', {
+    get(){ return stopPreview; },
+    set(fn){ /* ignore */ },
+    configurable:true
+  });
+
+  // Click on progress bar to seek
+  progressBar.addEventListener('click', e=>{
+    if(!previewAudio) return;
+    const rect = progressBar.getBoundingClientRect();
+    const pct  = (e.clientX-rect.left)/rect.width;
+    previewAudio.currentTime = pct * previewAudio.duration;
+  });
+
+  addBtn.addEventListener('click', ()=> vtAddToSequencer(rec));
+
+  delBtn.addEventListener('click', ()=>{
+    stopPreview();
+    // Find current index in vtRecordings by reference
+    const i = vtRecordings.indexOf(rec);
+    if(i>=0) vtRecordings.splice(i,1);
+    card.remove();
+    const g = document.getElementById('vt-recordings-grid');
+    if(!g.querySelector('.vt-card')){
+      const lbl=document.createElement('span');
+      lbl.id='vt-empty-lbl';
+      lbl.style.cssText='font-size:.7rem;color:var(--text-muted);padding:4px;align-self:center';
+      lbl.textContent='No takes yet — hit ⏺ to record';
+      g.appendChild(lbl);
+    }
+  });
+
+  grid.appendChild(card);
+}
+
+// ── Add a processed vocal to the sequencer ──
+async function vtAddToSequencer(rec){
+  if(!rec){ showToast('No take selected',true); return; }
+  showToast('⏳ Adding to sequencer…');
+  try {
+    await initAudio(); await resumeAC();
+
+    // Verify or re-establish the sampleBufs entry
+    if(!sampleBufs[rec.id]){
+      console.warn('VT add: sampleBufs['+rec.id+'] missing, re-decoding from blob...');
+      if(!rec.processedBlob){ showToast('No audio — process the recording first',true); return; }
+      const bytes2 = await rec.processedBlob.slice(0).arrayBuffer();
+      sampleBufs[rec.id] = await new Promise((res,rej) => AC.decodeAudioData(bytes2, res, rej));
+    }
+    console.log('VT add: sampleBufs['+rec.id+']=', sampleBufs[rec.id], 'dur='+sampleBufs[rec.id]?.duration?.toFixed(2));
+
+    const trackId = rec.id;   // reuse the stable rec ID so sampleBufs lookup always works
+    const newTrack = {
+      id: trackId,
+      label: (rec.name || 'Vocal Take').substring(0, 28),
+      emoji: '🎤',
+      sound: 'userSample',
+      color: '#CC00FF',
+      params: { volume:1 },
+      group: 'VOCAL TAKES'
+    };
+
+    // sampleBufs[trackId] already set above — no need to re-assign
+    AVAILABLE_TRACKS.push(newTrack);
+    TRACKS.push(newTrack);
+    pattern.push(Array(STEPS).fill(0));
+    velocities.push(Array(STEPS).fill(100));
+    trackMutes.push(false);
+    trackSolos.push(false);
+
+    buildGrid(); refreshGrid();
+
+    // Auto-enable first beat so user hears it immediately when playback runs
+    const newTi = TRACKS.length - 1;
+    if(pattern[newTi]) pattern[newTi][0] = 1;
+    refreshGrid();
+
+    setTimeout(()=>{
+      switchView('seq');
+      showToast('🎤 "'+newTrack.label+'" added to sequencer! ▶ Play to hear it.');
+    }, 400);
+  } catch(e){
+    console.error('vtAddToSequencer error', e);
+    showToast('Add failed: '+e.message, true);
+  }
+}
+
+function vtAddLastToSeq(){
+  if(!vtRecordings.length){ showToast('No vocal takes yet',true); return; }
+  vtAddToSequencer(vtRecordings[vtRecordings.length-1]);
+}
+
+// ── Update UI state ──
+function vtUpdateUI(){
+  const recBtn  = document.getElementById('vt-record-btn');
+  const recLbl  = document.getElementById('vt-record-lbl');
+  const dot     = document.getElementById('vt-status-dot');
+  const applyBtn= document.getElementById('vt-apply-btn');
+  const addBtn  = document.getElementById('vt-add-seq-btn');
+  const timer   = document.getElementById('vt-timer');
+
+  if(vtState==='recording'){
+    recBtn.textContent='⏹';
+    recBtn.style.background='rgba(255,40,40,.45)';
+    recBtn.style.borderColor='rgba(255,40,40,.9)';
+    recBtn.style.boxShadow='0 0 18px rgba(255,40,40,.6)';
+    recLbl.textContent='RECORDING…';
+    dot.style.background='#ff4444';
+    dot.style.boxShadow='0 0 8px #ff4444';
+  } else if(vtState==='processing'){
+    recBtn.textContent='⚙️';
+    recBtn.style.background='rgba(0,200,255,.2)';
+    recBtn.style.borderColor='rgba(0,200,255,.5)';
+    recBtn.style.boxShadow='0 0 12px rgba(0,200,255,.3)';
+    recLbl.textContent='PROCESSING…';
+    dot.style.background='#00cfff';
+    dot.style.boxShadow='0 0 8px #00cfff';
+    timer.style.display='none';
+  } else if(vtState==='done'){
+    recBtn.textContent='⏺';
+    recBtn.style.background='rgba(0,255,100,.15)';
+    recBtn.style.borderColor='rgba(0,255,100,.5)';
+    recBtn.style.boxShadow='0 0 12px rgba(0,255,100,.3)';
+    recLbl.textContent='DONE — TAP FOR NEW TAKE';
+    dot.style.background='#00ff88';
+    dot.style.boxShadow='0 0 8px #00ff88';
+    timer.style.display='none';
+    // Enable process + add buttons
+    applyBtn.style.opacity='1'; applyBtn.style.pointerEvents='auto';
+    addBtn.style.opacity='1';   addBtn.style.pointerEvents='auto';
+  } else {
+    recBtn.textContent='⏺';
+    recBtn.style.background='rgba(255,40,40,.18)';
+    recBtn.style.borderColor='rgba(255,40,40,.5)';
+    recBtn.style.boxShadow='';
+    recLbl.textContent='TAP TO RECORD';
+    dot.style.background='#333';
+    dot.style.boxShadow='';
+    timer.style.display='none';
+  }
+}
+
+// ── Wire vocal character buttons early (before tab is ever opened) ──
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.querySelectorAll('.vt-char-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      vtCurrentChar = btn.dataset.char;
+      document.querySelectorAll('.vt-char-btn').forEach(b=>{
+        const active = b.dataset.char === vtCurrentChar;
+        b.style.background  = active ? 'rgba(159,0,255,.3)'        : 'var(--bg-deeper)';
+        b.style.borderColor = active ? 'var(--purple-bright)'      : 'var(--border)';
+        b.style.color       = active ? '#fff'                      : 'var(--text-muted)';
+        b.style.boxShadow   = active ? '0 0 8px rgba(159,0,255,.4)': '';
+        b.style.fontWeight  = active ? '700'                       : '400';
+      });
+      if(vtRawBlob && vtState !== 'recording' && vtState !== 'processing'){
+        showToast('🔄 Applying "'+vtCurrentChar+'" …');
+        vtState='processing'; vtUpdateUI(); vtProcessRecording();
+      }
+    });
+  });
+});
 
 // ── BOOT ──
 buildGrid();
@@ -5739,5 +7280,20 @@ async function addGuitarToSequencer(recOrIdx){
 }
 
 </script>
+
+<!-- ════ FOOTER COPYRIGHT ════ -->
+<div id="site-footer" style="position:fixed;bottom:0;left:0;right:0;z-index:900;
+  background:linear-gradient(0deg,rgba(8,0,18,.98) 0%,rgba(8,0,18,.85) 100%);
+  border-top:1px solid rgba(159,0,255,.15);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:5px 18px;pointer-events:none">
+  <span style="font-size:.62rem;color:rgba(255,255,255,.28);letter-spacing:.08em">
+    © 2025 <strong style="color:rgba(159,0,255,.7)">Diorarlone</strong> · GIGO Beat Maker · All rights reserved
+  </span>
+  <span style="font-size:.6rem;color:rgba(255,255,255,.18);letter-spacing:.06em">
+    Made with 🦇 in the browser
+  </span>
+</div>
+
 </body>
-</html>
+</html
