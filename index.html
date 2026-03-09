@@ -93,6 +93,21 @@ header{
 .kick-pick-btn:hover{background:var(--bg-hover);color:var(--text-primary)}
 .kick-pick-btn.selected{background:rgba(255,140,0,.25);border-color:var(--accent);color:#fff}
 .header-actions{display:flex;gap:7px;align-items:center}
+.btn-account{
+  width:36px;height:36px;border-radius:50%;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.95rem;position:relative;flex-shrink:0;
+  background:rgba(255,140,0,.15);border:1.5px solid rgba(255,140,0,.4);
+  color:var(--accent);transition:all .2s;
+}
+.btn-account:hover{ background:rgba(255,140,0,.3); box-shadow:0 0 14px rgba(255,140,0,.4); }
+.btn-account.logged-in{ background:rgba(0,255,100,.15);border-color:rgba(0,255,100,.5);color:#00ff88; }
+.btn-account.trial{ background:rgba(0,255,100,.15);border-color:rgba(0,255,100,.5);color:#00ff88; }
+.btn-account.paid{ background:rgba(255,140,0,.2);border-color:var(--accent);color:var(--accent); }
+.btn-account.expired{ background:rgba(255,60,60,.15);border-color:rgba(255,60,60,.5);color:#ff6666; }
+.acct-tab-pane{ display:block; }
+.acct-tab{ transition:all .2s; }
+.acct-tab:hover{ color:var(--accent) !important; }
 .btn-icon{background:rgba(255,140,0,.08);border:1px solid var(--border);color:var(--text-secondary);border-radius:var(--radius);padding:6px 11px;cursor:pointer;font-size:.78rem;font-weight:500;letter-spacing:.05em;transition:all .2s}
 .btn-icon:hover{background:rgba(255,140,0,.18);border-color:var(--border-active);color:var(--text-primary)}
 
@@ -167,19 +182,51 @@ header{
 
 /* ── Settings Panel ── */
 #settings-panel{
-  position:fixed;top:0;left:0;width:300px;height:100vh;z-index:2000;
-  background:var(--bg-card);border-right:1px solid var(--border);
-  box-shadow:6px 0 40px rgba(0,0,0,.8);
+  position:fixed;top:0;left:0;z-index:2000;
+  background:var(--bg-card);
   display:flex;flex-direction:column;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  /* Desktop: slide from left */
+  width:300px;height:100vh;
+  border-right:1px solid var(--border);
+  box-shadow:6px 0 40px rgba(0,0,0,.8);
   transform:translateX(-100%);transition:transform .28s cubic-bezier(.22,1,.36,1);
-  overflow-y:auto;
 }
 #settings-panel.open{transform:translateX(0);}
 #settings-overlay{
-  position:fixed;inset:0;z-index:1999;background:rgba(0,0,0,.5);
+  position:fixed;inset:0;z-index:1999;background:rgba(0,0,0,.55);
   opacity:0;pointer-events:none;transition:opacity .28s;
 }
 #settings-overlay.open{opacity:1;pointer-events:auto;}
+/* Mobile: full-screen bottom sheet */
+@media(max-width:600px){
+  #settings-panel{
+    top:auto;bottom:0;left:0;right:0;
+    width:100%;height:85vh;max-height:85vh;
+    border-right:none;border-top:1.5px solid var(--accent);
+    border-radius:18px 18px 0 0;
+    box-shadow:0 -8px 40px rgba(0,0,0,.9);
+    transform:translateY(100%);
+  }
+  #settings-panel.open{transform:translateY(0);}
+  /* Drag handle pill */
+  #settings-panel::before{
+    content:'';display:block;width:40px;height:4px;
+    background:rgba(255,255,255,.25);border-radius:2px;
+    margin:10px auto 0;flex-shrink:0;
+  }
+  .settings-header{ padding:10px 18px 12px; }
+  .settings-header h2{ font-size:.9rem; }
+  .settings-section{ padding:12px 16px; }
+  .settings-label{ font-size:.85rem; }
+  .theme-swatch{ width:40px;height:40px; }
+  .toggle-switch{ width:46px;height:26px; }
+  .toggle-slider:before{ width:18px;height:18px; }
+  .toggle-switch input:checked+.toggle-slider:before{ transform:translateX(20px); }
+  .settings-row{ margin-bottom:14px; }
+  .range-row input[type=range]{ height:28px; }
+  #settings-reset-btn{ padding:14px;font-size:.82rem; }
+}
 .settings-header{
   display:flex;align-items:center;justify-content:space-between;
   padding:18px 18px 14px;border-bottom:1px solid var(--border);flex-shrink:0;
@@ -392,9 +439,10 @@ input[type='range']::-moz-range-thumb{width:12px;height:12px;border-radius:50%;b
 }
 .track-lbl{
   height:var(--row-h);flex-shrink:0;
-  display:flex;align-items:center;padding:3px 7px;gap:5px;
+  display:flex;align-items:center;padding:3px 5px 3px 8px;gap:4px;
   cursor:pointer;transition:background .12s;position:relative;
-  border-bottom:1px solid rgba(159,0,255,.06);
+  border-bottom:1px solid rgba(255,140,0,.06);
+  overflow:hidden;
 }
 .track-lbl::before{content:'';position:absolute;left:0;top:3px;bottom:3px;width:3px;border-radius:2px;background:var(--tc,#9F00FF);opacity:.7}
 .track-lbl:hover{background:rgba(159,0,255,.09)}
@@ -402,13 +450,13 @@ input[type='range']::-moz-range-thumb{width:12px;height:12px;border-radius:50%;b
 .track-lbl.pad-hit{background:rgba(159,0,255,.2)!important;animation:padFlash .12s ease}
 @keyframes padFlash{0%{background:rgba(159,0,255,.42)}100%{background:rgba(159,0,255,.2)}}
 .tlbl-emoji{font-size:.88rem;flex-shrink:0;pointer-events:none}
-.tlbl-name{font-size:.72rem;font-weight:600;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;pointer-events:none}
-.tlbl-acts{display:flex;gap:2px;flex-shrink:0}
-.mbtn,.sbtn{width:15px;height:15px;border-radius:2px;border:1px solid rgba(100,60,150,.35);background:transparent;
+.tlbl-name{font-size:.68rem;font-weight:600;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;pointer-events:none;min-width:0}
+.tlbl-acts{display:flex;gap:2px;flex-shrink:0;margin-left:auto}
+.mbtn,.sbtn{width:17px;height:17px;border-radius:2px;border:1px solid rgba(255,140,0,.25);background:transparent;
   color:var(--text-muted);font-size:.48rem;font-weight:700;cursor:pointer;font-family:var(--font-display);transition:all .15s;padding:0;display:flex;align-items:center;justify-content:center}
 .mbtn:hover{border-color:#FF4444;color:#FF4444}.mbtn.active{background:rgba(255,60,60,.28);border-color:#FF4444;color:#FF4444}
 .sbtn:hover{border-color:#FFAA00;color:#FFAA00}.sbtn.active{background:rgba(255,170,0,.28);border-color:#FFAA00;color:#FFAA00}
-.xbtn{width:16px;height:16px;border-radius:3px;background:transparent;border:1px solid transparent;color:var(--text-muted);font-size:.52rem;cursor:pointer;transition:all .15s;padding:0;display:flex;align-items:center;justify-content:center}
+.xbtn{width:18px;height:18px;border-radius:3px;background:rgba(255,60,60,.08);border:1px solid rgba(255,60,60,.25);color:#cc4444;font-size:.58rem;cursor:pointer;transition:all .15s;padding:0;display:flex;align-items:center;justify-content:center}
 .xbtn:hover{border-color:#FF4444;color:#FF4444;background:rgba(255,60,60,.18)}
 .upload-btn{width:16px;height:16px;border-radius:2px;border:1px solid var(--border);background:var(--bg-raised);
   color:var(--text-secondary);font-size:.58rem;cursor:pointer;transition:all .15s;padding:0;display:flex;align-items:center;justify-content:center}
@@ -1187,6 +1235,75 @@ select{background:var(--bg-raised);border:1px solid var(--border);color:var(--te
   :root{--track-label-w:100px;--step-w:30px;--row-h:34px;--bottom-panel-h:200px}
   .brand-text p{display:none}
 }
+/* ── Hand Pan ── */
+#view-handpan { background: radial-gradient(ellipse at 50% 30%, #1e1000 0%, #0a0500 100%); }
+#hp-canvas { border-radius: 50%; display: block; margin: auto;
+  box-shadow: 0 0 60px rgba(255,140,0,0.15), 0 0 120px rgba(255,80,0,0.08); }
+#hp-last-note { font-family: var(--font-display); letter-spacing:.1em;
+  text-shadow: 0 0 18px var(--accent); transition: all .15s; }
+#hp-record-btn, #hp-add-seq-btn { font-family: var(--font-display); letter-spacing:.06em;
+  transition: all .2s; border-radius: var(--radius); cursor: pointer; }
+#hp-rec-timer { font-family: var(--font-display); }
+
+/* ── Sample/Clip tracks (userSample) ── */
+.step-row.clip-row{
+  position:relative;background:rgba(0,0,0,.15);
+  border-bottom:1px solid rgba(255,140,0,.1);
+  overflow:visible;
+}
+.clip-track-wrap{
+  position:relative;flex:1;height:calc(var(--row-h) - 6px);
+  min-width:max-content;display:flex;align-items:center;
+}
+.clip-block{
+  position:absolute;height:calc(var(--row-h) - 10px);
+  border-radius:6px;cursor:grab;user-select:none;
+  display:flex;align-items:center;
+  border:2px solid rgba(255,255,255,.35);
+  box-shadow:0 2px 12px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.15);
+  min-width:60px;z-index:5;
+  overflow:hidden;transition:box-shadow .15s;
+  background:linear-gradient(135deg, var(--clip-col,#FF8C00) 0%, color-mix(in srgb, var(--clip-col,#FF8C00) 60%, #000) 100%);
+}
+.clip-block:hover{ box-shadow:0 4px 20px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.4); }
+.clip-block.playing{ box-shadow:0 0 0 2px #fff,0 0 20px rgba(255,255,255,.4),inset 0 0 20px rgba(255,255,255,.08); animation:clipPulse .5s ease infinite alternate; }
+@keyframes clipPulse{ from{border-color:rgba(255,255,255,.4)} to{border-color:rgba(255,255,255,.9)} }
+.clip-block:active{ cursor:grabbing; }
+.clip-label{
+  font-family:var(--font-display);font-size:.55rem;font-weight:700;
+  color:rgba(255,255,255,.9);letter-spacing:.06em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  padding:0 8px;flex:1;pointer-events:none;text-shadow:0 1px 3px rgba(0,0,0,.7);
+}
+.clip-waveform{
+  position:absolute;inset:0;pointer-events:none;opacity:.4;
+}
+/* Resize handles */
+.clip-handle{
+  position:absolute;top:0;bottom:0;width:10px;
+  background:rgba(255,255,255,.25);cursor:ew-resize;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s;z-index:10;flex-shrink:0;
+}
+.clip-handle:hover{ background:rgba(255,255,255,.5); }
+.clip-handle-left{ left:0;border-radius:5px 0 0 5px; }
+.clip-handle-right{ right:0;border-radius:0 5px 5px 0; }
+.clip-handle::after{
+  content:'⋮';color:rgba(255,255,255,.7);font-size:.7rem;pointer-events:none;
+}
+/* Empty lane background grid for clip tracks */
+.clip-lane-bg{
+  position:absolute;inset:0;display:flex;pointer-events:none;
+}
+.clip-lane-beat{
+  flex-shrink:0;border-right:1px solid rgba(255,140,0,.08);
+  height:100%;
+}
+.clip-lane-beat:nth-child(4n+1){ border-right-color:rgba(255,140,0,.2); }
+/* Track label for clip tracks */
+.track-lbl.clip-track .tlbl-emoji{ color:var(--tc); }
+.track-lbl.clip-track{ border-left:3px solid var(--tc); padding-left:10px; }
+
 </style>
 <!-- Firebase SDK -->
 <script type="module">
@@ -1430,12 +1547,13 @@ onAuthStateChanged(fbAuth, async (firebaseUser) => {
   </div>
 
   <div class="header-actions" style="position:relative;z-index:2">
-    <button class="btn-icon" id="btn-login">👤 Login</button>
-    <button class="btn-icon" id="btn-export" style="background:rgba(0,255,100,.12);border-color:rgba(0,255,100,.3);color:#00ff88" title="Export beat (login required)">⬇️ Export</button>
-    <button class="btn-icon" id="btn-piano">🎹 Piano</button>
-    <button class="btn-icon" id="btn-drums">🥁 Pads</button>
+    <!-- hidden legacy buttons kept for JS refs -->
+    <button id="btn-export" style="display:none"></button>
+    <button id="btn-piano"  style="display:none"></button>
+    <button id="btn-drums"  style="display:none"></button>
     <button class="btn-icon" id="btn-about">👨‍💻 About</button>
-    <button class="btn-icon" id="btn-help">? Help</button>
+    <button class="btn-icon" id="btn-help">❓ Help</button>
+    <button class="btn-icon btn-account" id="btn-account" title="Account">👤</button>
   </div>
 </header>
 
@@ -1518,6 +1636,7 @@ onAuthStateChanged(fbAuth, async (firebaseUser) => {
   <button class="mode-tab" data-tab="drums">🎤 DRUM PADS</button>
   <button class="mode-tab" data-tab="guitar">🎸 GUITAR</button>
   <button class="mode-tab" data-tab="vocal">🎤 VOCAL TUNE</button>
+  <button class="mode-tab" data-tab="handpan">🥁 HAND PAN</button>
 </div>
 
 <!-- APP BODY -->
@@ -1858,6 +1977,50 @@ onAuthStateChanged(fbAuth, async (firebaseUser) => {
 
   </div>
 
+  <!-- ════════════════════ HAND PAN VIEW ════════════════════ -->
+  <div id="view-handpan" style="display:none;flex:1;flex-direction:column;overflow:hidden;padding:12px 16px;gap:10px;align-items:center">
+
+    <!-- Toolbar -->
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%;padding-bottom:8px;border-bottom:1px solid var(--border)">
+      <span style="font-family:var(--font-display);font-size:.58rem;color:var(--accent);letter-spacing:.15em">🎵 HAND PAN</span>
+      <select id="hp-scale" style="background:var(--bg-raised);border:1px solid var(--border);color:var(--text-secondary);border-radius:var(--radius);padding:3px 8px;font-size:.72rem;cursor:pointer;outline:none">
+        <option value="d_minor">D Minor (Kurd)</option>
+        <option value="d_major">D Major</option>
+        <option value="e_minor">E Minor</option>
+        <option value="a_minor">A Minor</option>
+        <option value="c_major">C Major</option>
+        <option value="pentatonic">Pentatonic</option>
+        <option value="integral">Integral</option>
+        <option value="hijaz">Hijaz (Arabic)</option>
+      </select>
+      <select id="hp-resonance" style="background:var(--bg-raised);border:1px solid var(--border);color:var(--text-secondary);border-radius:var(--radius);padding:3px 8px;font-size:.72rem;cursor:pointer;outline:none">
+        <option value="warm">🌙 Warm</option>
+        <option value="bright">☀️ Bright</option>
+        <option value="deep">🌊 Deep</option>
+        <option value="metallic">⚡ Metallic</option>
+      </select>
+      <label style="display:flex;align-items:center;gap:5px;font-size:.7rem;color:var(--text-secondary);cursor:pointer">
+        <input type="checkbox" id="hp-reverb-toggle" checked style="accent-color:var(--accent)"> Reverb
+      </label>
+      <button id="hp-record-btn" style="background:rgba(255,60,60,.2);border:1px solid rgba(255,60,60,.5);color:#ff4444;border-radius:var(--radius);padding:4px 12px;cursor:pointer;font-size:.68rem;font-weight:700">⏺ RECORD</button>
+      <button id="hp-add-seq-btn" style="background:rgba(0,255,100,.15);border:1px solid rgba(0,255,100,.4);color:#00ff88;border-radius:var(--radius);padding:4px 12px;cursor:pointer;font-size:.68rem;font-weight:700;display:none">➕ ADD TO SEQUENCER</button>
+      <span id="hp-rec-timer" style="font-family:var(--font-display);font-size:.78rem;color:var(--accent);display:none">0:00</span>
+    </div>
+
+    <!-- The pan instrument SVG canvas -->
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;width:100%;overflow:hidden">
+      <canvas id="hp-canvas" style="touch-action:none;cursor:pointer;max-width:100%;max-height:100%"></canvas>
+    </div>
+
+    <!-- Note labels and last hit indicator -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding-top:6px;border-top:1px solid var(--border);width:100%">
+      <span id="hp-last-note" style="font-family:var(--font-display);font-size:1.1rem;color:var(--accent);min-width:40px;text-align:center">—</span>
+      <span style="font-size:.7rem;color:var(--text-muted)">Tap / click any tone field to play</span>
+      <span id="hp-rec-status" style="font-size:.7rem;color:var(--text-muted)"></span>
+    </div>
+
+  </div>
+
   <div id="view-drums" style="display:none;flex:1;flex-direction:column;overflow:hidden">
     <div class="drums-wrap">
       <div class="drums-toolbar">
@@ -2007,6 +2170,186 @@ onAuthStateChanged(fbAuth, async (firebaseUser) => {
 <!-- LOGIN MODAL -->
 
 <!-- ════ PAYWALL MODAL ════ -->
+<!-- ════ ACCOUNT MODAL ════ -->
+<div class="modal-overlay" id="account-modal">
+  <div class="modal-box" style="max-width:420px;padding:0;overflow:hidden;border-radius:16px;border:1px solid var(--accent);position:relative">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid var(--border);background:var(--bg-raised)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span id="acct-avatar" style="font-size:1.8rem">👤</span>
+        <div>
+          <div id="acct-name" style="font-family:var(--font-display);font-size:.88rem;color:#fff;font-weight:700">Not logged in</div>
+          <div id="acct-email" style="font-size:.7rem;color:var(--text-muted);margin-top:1px"></div>
+        </div>
+      </div>
+      <button onclick="document.getElementById('account-modal').classList.remove('open')"
+        style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;padding:4px 8px;border-radius:4px">✕</button>
+    </div>
+
+    <!-- Tab bar -->
+    <div style="display:flex;border-bottom:1px solid var(--border);background:var(--bg-card)">
+      <button class="acct-tab active" data-acct-tab="profile" style="flex:1;padding:10px;font-size:.72rem;font-family:var(--font-display);letter-spacing:.08em;background:none;border:none;border-bottom:2px solid var(--accent);color:var(--accent);cursor:pointer;transition:all .15s">👤 PROFILE</button>
+      <button class="acct-tab" data-acct-tab="plan" style="flex:1;padding:10px;font-size:.72rem;font-family:var(--font-display);letter-spacing:.08em;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);cursor:pointer;transition:all .15s">⭐ PLAN</button>
+      <button class="acct-tab" data-acct-tab="pay" style="flex:1;padding:10px;font-size:.72rem;font-family:var(--font-display);letter-spacing:.08em;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-muted);cursor:pointer;transition:all .15s">💳 PAYMENT</button>
+    </div>
+
+    <!-- Tab contents -->
+    <div style="padding:20px;min-height:260px;background:var(--bg-card)">
+
+      <!-- PROFILE tab -->
+      <div id="acct-tab-profile" class="acct-tab-pane">
+        <!-- Logged in view -->
+        <div id="acct-loggedin" style="display:none">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
+              <div style="font-size:.62rem;color:var(--text-muted);letter-spacing:.12em;margin-bottom:4px">DISPLAY NAME</div>
+              <div id="acct-display-name" style="font-size:.88rem;color:#fff;font-weight:600"></div>
+            </div>
+            <div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
+              <div style="font-size:.62rem;color:var(--text-muted);letter-spacing:.12em;margin-bottom:4px">EMAIL</div>
+              <div id="acct-display-email" style="font-size:.82rem;color:var(--text-secondary)"></div>
+            </div>
+            <div id="acct-status-row" style="background:var(--bg-raised);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
+              <div style="font-size:.62rem;color:var(--text-muted);letter-spacing:.12em;margin-bottom:4px">STATUS</div>
+              <div id="acct-status-text" style="font-size:.82rem;font-weight:600"></div>
+            </div>
+            <button onclick="fbSignOut().then(()=>document.getElementById('account-modal').classList.remove('open'))"
+              style="width:100%;padding:10px;background:rgba(255,60,60,.12);border:1px solid rgba(255,60,60,.3);color:#ff6666;border-radius:8px;cursor:pointer;font-size:.78rem;font-weight:700;font-family:var(--font-display);letter-spacing:.06em;transition:all .2s"
+              onmouseover="this.style.background='rgba(255,60,60,.22)'" onmouseout="this.style.background='rgba(255,60,60,.12)'">
+              🚪 SIGN OUT
+            </button>
+          </div>
+        </div>
+
+        <!-- Logged out view -->
+        <div id="acct-loggedout">
+          <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:16px;line-height:1.6">Sign in to save your settings, unlock export, and manage your plan.</p>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <input id="acct-login-email" type="email" placeholder="Email" autocomplete="email"
+              style="width:100%;padding:10px 12px;background:var(--bg-raised);border:1px solid var(--border);border-radius:8px;color:#fff;font-size:.85rem;outline:none;transition:border .2s"
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+            <input id="acct-login-pw" type="password" placeholder="Password"
+              style="width:100%;padding:10px 12px;background:var(--bg-raised);border:1px solid var(--border);border-radius:8px;color:#fff;font-size:.85rem;outline:none;transition:border .2s"
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+            <div style="display:flex;gap:8px">
+              <button id="acct-signin-btn"
+                style="flex:1;padding:10px;background:var(--accent);border:none;border-radius:8px;color:#000;font-weight:800;cursor:pointer;font-size:.82rem;font-family:var(--font-display);letter-spacing:.06em;transition:all .2s">
+                SIGN IN
+              </button>
+              <button id="acct-signup-btn"
+                style="flex:1;padding:10px;background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:8px;color:#fff;font-weight:600;cursor:pointer;font-size:.82rem;font-family:var(--font-display);letter-spacing:.06em;transition:all .2s">
+                SIGN UP
+              </button>
+            </div>
+            <button id="acct-guest-btn"
+              style="width:100%;padding:8px;background:none;border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--text-muted);cursor:pointer;font-size:.75rem;transition:all .2s">
+              Continue as Guest (no export)
+            </button>
+          </div>
+          <div id="acct-auth-msg" style="margin-top:10px;font-size:.75rem;text-align:center;min-height:18px"></div>
+        </div>
+      </div>
+
+      <!-- PLAN tab -->
+      <div id="acct-tab-plan" class="acct-tab-pane" style="display:none">
+        <div id="acct-plan-free" style="display:none">
+          <div style="text-align:center;padding:10px 0 16px">
+            <div style="font-size:2.2rem;margin-bottom:8px">🆓</div>
+            <div style="font-family:var(--font-display);font-size:.95rem;color:#00ff88;font-weight:700">FREE TRIAL</div>
+            <div id="acct-free-remaining" style="font-size:.78rem;color:var(--text-muted);margin-top:4px"></div>
+          </div>
+          <div style="background:rgba(0,255,100,.06);border:1px solid rgba(0,255,100,.2);border-radius:10px;padding:14px;margin-bottom:16px">
+            <div style="font-size:.75rem;color:var(--text-secondary);line-height:1.7">
+              ✅ Full access to all instruments<br>
+              ✅ Beat sequencer (unlimited)<br>
+              ✅ Export beats &amp; recordings<br>
+              ⏳ Trial ends after 1 week
+            </div>
+          </div>
+          <button onclick="acctSwitchTab('pay')"
+            style="width:100%;padding:12px;background:linear-gradient(135deg,var(--accent),var(--accent-mid));border:none;border-radius:10px;color:#000;font-weight:800;cursor:pointer;font-size:.82rem;font-family:var(--font-display);letter-spacing:.08em">
+            UPGRADE → $3 / WEEK
+          </button>
+        </div>
+
+        <div id="acct-plan-paid" style="display:none">
+          <div style="text-align:center;padding:10px 0 16px">
+            <div style="font-size:2.2rem;margin-bottom:8px">⭐</div>
+            <div style="font-family:var(--font-display);font-size:.95rem;color:var(--accent);font-weight:700">PRO PLAN</div>
+            <div id="acct-paid-remaining" style="font-size:.78rem;color:var(--text-muted);margin-top:4px"></div>
+          </div>
+          <div style="background:rgba(255,140,0,.06);border:1px solid rgba(255,140,0,.2);border-radius:10px;padding:14px;margin-bottom:16px">
+            <div style="font-size:.75rem;color:var(--text-secondary);line-height:1.7">
+              ✅ Full access to all instruments<br>
+              ✅ Export all beats &amp; recordings<br>
+              ✅ Guitar, vocal &amp; hand pan takes<br>
+              ☁️ Cloud save — coming soon
+            </div>
+          </div>
+          <button onclick="acctSwitchTab('pay')"
+            style="width:100%;padding:12px;background:rgba(255,140,0,.15);border:1px solid var(--accent);border-radius:10px;color:var(--accent);font-weight:700;cursor:pointer;font-size:.8rem;font-family:var(--font-display);letter-spacing:.06em">
+            🔄 RENEW / EXTEND PLAN
+          </button>
+        </div>
+
+        <div id="acct-plan-expired" style="display:none">
+          <div style="text-align:center;padding:10px 0 16px">
+            <div style="font-size:2.2rem;margin-bottom:8px">🔒</div>
+            <div style="font-family:var(--font-display);font-size:.95rem;color:#ff6666;font-weight:700">TRIAL EXPIRED</div>
+            <div style="font-size:.75rem;color:var(--text-muted);margin-top:4px">Upgrade to keep exporting</div>
+          </div>
+          <button onclick="acctSwitchTab('pay')"
+            style="width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),var(--accent-mid));border:none;border-radius:10px;color:#000;font-weight:800;cursor:pointer;font-size:.9rem;font-family:var(--font-display);letter-spacing:.1em;box-shadow:0 4px 20px rgba(255,140,0,.4)">
+            🔓 UNLOCK — $3 / WEEK
+          </button>
+        </div>
+
+        <div id="acct-plan-guest" style="display:none">
+          <div style="text-align:center;padding:20px 0">
+            <div style="font-size:.82rem;color:var(--text-muted);line-height:1.7">Sign in to see your plan details</div>
+            <button onclick="acctSwitchTab('profile')" style="margin-top:14px;padding:8px 20px;background:var(--accent);border:none;border-radius:8px;color:#000;font-weight:700;cursor:pointer;font-size:.8rem;font-family:var(--font-display)">
+              SIGN IN
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAYMENT tab -->
+      <div id="acct-tab-pay" class="acct-tab-pane" style="display:none">
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="font-family:var(--font-display);font-size:2rem;font-weight:900;color:var(--accent)">$3</div>
+          <div style="font-size:.78rem;color:var(--text-muted)">per week &nbsp;·&nbsp; <span style="color:#00ff88">First week FREE</span></div>
+        </div>
+        <div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:.75rem;color:var(--text-secondary);line-height:1.8">
+          ✅ Export all beats as audio files<br>
+          ✅ Guitar, piano &amp; vocal recordings<br>
+          ✅ Hand pan &amp; drum pad recordings<br>
+          ☁️ Cloud saves — coming soon
+        </div>
+        <button id="acct-paypal-btn"
+          style="width:100%;padding:14px;background:linear-gradient(135deg,#FFC439 0%,#F0A500 100%);border:none;border-radius:10px;cursor:pointer;font-weight:800;font-size:.95rem;color:#003087;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 18px rgba(255,196,57,.35);transition:all .2s;font-family:var(--font-display);letter-spacing:.04em"
+          onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 28px rgba(255,196,57,.55)'"
+          onmouseout="this.style.transform='';this.style.boxShadow='0 4px 18px rgba(255,196,57,.35)'">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c1.379 4.275-1.376 6.53-6.088 6.53H12.32c-.524 0-.968.382-1.05.9l-1.45 9.21c-.08.51.28.98.794.98h3.593c.458 0 .849-.333.92-.785l.038-.196.733-4.647.047-.256a.932.932 0 0 1 .92-.785h.579c3.754 0 6.693-1.525 7.552-5.935.36-1.845.173-3.386-.774-4.476z" fill="#003087"/></svg>
+          PAY $3 / WEEK WITH PAYPAL
+        </button>
+        <div id="acct-pay-confirm" style="display:none;margin-top:12px;text-align:center">
+          <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:10px">Did you complete the payment?</div>
+          <button id="acct-confirm-paid-btn"
+            style="padding:10px 24px;background:rgba(0,255,100,.2);border:1px solid rgba(0,255,100,.5);color:#00ff88;border-radius:8px;cursor:pointer;font-weight:700;font-size:.82rem;font-family:var(--font-display)">
+            ✅ YES, I PAID
+          </button>
+        </div>
+        <p style="text-align:center;font-size:.65rem;color:var(--text-muted);margin:12px 0 0;line-height:1.5">
+          Secure payment via PayPal · 7 days access · Cancel anytime
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="paywall-modal">
   <div class="modal-box" style="max-width:400px;padding:28px 24px">
 
@@ -2014,7 +2357,7 @@ onAuthStateChanged(fbAuth, async (firebaseUser) => {
     <div style="text-align:center;margin-bottom:20px">
       <div style="font-size:2.8rem;filter:drop-shadow(0 0 14px #9F00FF)">🔒</div>
       <h2 style="margin:8px 0 4px;font-family:var(--font-display);font-size:1.25rem;letter-spacing:.06em;color:#fff">UNLOCK EXPORT</h2>
-      <p style="color:var(--text-muted);font-size:.78rem;margin:0;line-height:1.5">Your first <strong style="color:#00ff88">24 hours are FREE</strong>.<br>After that, just <strong style="color:var(--purple-bright)">$1 / week</strong> to keep exporting.</p>
+      <p style="color:var(--text-muted);font-size:.78rem;margin:0;line-height:1.5">Your first <strong style="color:#00ff88">24 hours are FREE</strong>.<br>After that, just <strong style="color:var(--accent)">$3 / week</strong> to keep exporting.</p>
     </div>
 
     <!-- Feature list -->
@@ -2035,7 +2378,7 @@ onAuthStateChanged(fbAuth, async (firebaseUser) => {
 
     <!-- Price -->
     <div style="text-align:center;margin-bottom:18px;padding:12px;background:rgba(0,0,0,.25);border-radius:8px">
-      <span style="font-family:var(--font-display);font-size:2.4rem;font-weight:900;color:var(--purple-bright);text-shadow:0 0 24px rgba(159,0,255,.7)">$1</span>
+      <span style="font-family:var(--font-display);font-size:2.4rem;font-weight:900;color:var(--purple-bright);text-shadow:0 0 24px rgba(159,0,255,.7)">$3</span>
       <span style="font-size:.85rem;color:var(--text-muted)"> / week &nbsp;·&nbsp; </span>
       <span style="font-size:.78rem;color:#00ff88">First 24h FREE</span>
     </div>
@@ -2054,7 +2397,7 @@ onAuthStateChanged(fbAuth, async (firebaseUser) => {
     </button>
 
     <p style="text-align:center;font-size:.68rem;color:var(--text-muted);margin:10px 0 0;line-height:1.6">
-      Secure · $1 unlocks full export for 7 days &nbsp;·&nbsp; Cancel anytime
+      Secure · $3 unlocks full export for 7 days &nbsp;·&nbsp; Cancel anytime
     </p>
 
     <div style="text-align:center;margin-top:10px">
@@ -2427,9 +2770,26 @@ const S={
       const sourceId=Date.now()+Math.random();
       window.activeAudioSources.push({id:sourceId,source:src});
       src.onended=()=>{window.activeAudioSources=window.activeAudioSources.filter(s=>s.id!==sourceId);};
-      // clamp start time: never in the past
       src.start(Math.max(AC.currentTime, t));
     }catch(e){ console.warn('userSample error:',e); }
+  },
+  userSampleClipped(t,p={},buf=null,dur=null){
+    if(!buf){ return; }
+    const{volume:v=1,pitch:pr=1}=p;
+    try{
+      const src=AC.createBufferSource();
+      src.buffer=buf;
+      src.playbackRate.value=pr||1;
+      const g=AC.createGain();g.gain.value=Math.max(0,v||1);
+      // Fade out last 50ms to avoid click at clip end
+      const playDur=dur!==null?Math.min(dur,buf.duration):buf.duration;
+      const safeT=Math.max(AC.currentTime,t);
+      g.gain.setValueAtTime(v||1,safeT);
+      g.gain.setTargetAtTime(0,safeT+playDur-0.05,0.02);
+      src.connect(g);g.connect(MG);
+      src.start(safeT);
+      src.stop(safeT+playDur+0.05);
+    }catch(e){ console.warn('userSampleClipped error:',e); }
   },
 
   // ══ MORE BASS ══
@@ -3635,8 +3995,16 @@ function schedNote(step,time){
     if(step%2===1&&swingAmt>0)nt+=((60/bpm)/4)*swingAmt*0.5;
     if(tr.sound==='userSample'){
       const sbuf = sampleBufs[tr.id];
-      if(!sbuf) console.warn('schedNote: sampleBufs['+tr.id+'] is undefined! Track:', tr.label);
-      S.userSample(nt,prm,sbuf);
+      if(!sbuf){ console.warn('schedNote: sampleBufs['+tr.id+'] undefined'); return; }
+      // Only play at the clip's startStep
+      const cs = clipState[tr.id];
+      if(cs && step !== cs.startStep) return; // not the trigger point
+      // Calculate play duration from clip length in beats
+      const stepDurSec = (60/bpm)/4;
+      const clipDurSec = cs ? cs.lengthSteps * stepDurSec : sbuf.duration;
+      // Play the sample, clipped to the clip's duration
+      const playDur = Math.min(sbuf.duration, clipDurSec);
+      S.userSampleClipped(nt, prm, sbuf, playDur);
     } else S[tr.sound]?.(nt,prm);
   });
 }
@@ -3656,10 +4024,24 @@ function updateUIStep(step){
     if(uiStep===step)return;
     document.querySelectorAll('.step-btn.playing').forEach(e=>e.classList.remove('playing'));
     document.querySelectorAll('.step-ruler-cell.cur').forEach(e=>e.classList.remove('cur'));
+    document.querySelectorAll('.clip-block.playing').forEach(e=>e.classList.remove('playing'));
     uiStep=step;
     document.querySelectorAll(`.step-btn[data-step="${step}"]`).forEach(e=>e.classList.add('playing'));
     const rc=document.querySelector(`.step-ruler-cell[data-step="${step}"]`);
     if(rc){rc.classList.add('cur');rc.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});}
+    // Highlight clip blocks that are currently playing (playhead inside clip range)
+    TRACKS.forEach((tr,ti)=>{
+      if(tr.sound!=='userSample') return;
+      const cs=clipState[tr.id];
+      if(!cs) return;
+      const inside=step>=cs.startStep && step<cs.startStep+cs.lengthSteps;
+      // Find the clip block for this track (by track index in clip rows)
+      const clipBlocks=document.querySelectorAll('.clip-block');
+      // Match by row order: count clip rows
+      let clipIdx=0;
+      TRACKS.forEach((t2,ti2)=>{ if(ti2<ti && t2.sound==='userSample') clipIdx++; });
+      if(clipBlocks[clipIdx]) clipBlocks[clipIdx].classList.toggle('playing',inside);
+    });
   });
 }
 async function startPlay(){await resumeAC();nextTime=AC.currentTime+0.05;curStep=0;schedTimer=setInterval(scheduler,LOOKAHEAD*1000);}
@@ -3757,25 +4139,26 @@ function buildGrid(){
     });
     left.appendChild(lbl);
 
-    // Right step row
-    const row=document.createElement('div');
-    row.className='step-row';
-    for(let s=0;s<STEPS;s++){
-      const btn=document.createElement('button');
-      btn.className='step-btn'+(s%4===0?' beat':'');
-      btn.style.setProperty('--tc',tr.color);
-      btn.dataset.track=ti;btn.dataset.step=s;
-      
-      // Add tape visual for audio recordings
-      if (tr.params?.isAudioRecording) {
-        btn.classList.add('audio-tape');
+    if(tr.sound === 'userSample'){
+      // ── Clip / sample track ──
+      lbl.classList.add('clip-track');
+      const row = buildClipRow(tr, ti);
+      right.appendChild(row);
+    } else {
+      // ── Regular step-button row ──
+      const row=document.createElement('div');
+      row.className='step-row';
+      for(let s=0;s<STEPS;s++){
+        const btn=document.createElement('button');
+        btn.className='step-btn'+(s%4===0?' beat':'');
+        btn.style.setProperty('--tc',tr.color);
+        btn.dataset.track=ti;btn.dataset.step=s;
+        btn.addEventListener('click',()=>toggleStep(ti,s,btn));
+        btn.addEventListener('contextmenu',e=>{e.preventDefault();cycleVel(ti,s,btn);});
+        row.appendChild(btn);
       }
-      
-      btn.addEventListener('click',()=>toggleStep(ti,s,btn));
-      btn.addEventListener('contextmenu',e=>{e.preventDefault();cycleVel(ti,s,btn);});
-      row.appendChild(btn);
+      right.appendChild(row);
     }
-    right.appendChild(row);
   });
 
   // Mute/solo
@@ -4525,6 +4908,8 @@ function switchView(tab){
   document.getElementById('view-drums').style.display=tab==='drums'?'flex':'none';
   document.getElementById('view-guitar').style.display=tab==='guitar'?'flex':'none';
   document.getElementById('view-vocal').style.display=tab==='vocal'?'flex':'none';
+  document.getElementById('view-handpan').style.display=tab==='handpan'?'flex':'none';
+  if(tab==='handpan') initHandPan();
 }
 document.querySelectorAll('.mode-tab').forEach(t=>t.addEventListener('click',()=>{
   const tabName = t.dataset.tab;
@@ -4535,9 +4920,11 @@ document.querySelectorAll('.mode-tab').forEach(t=>t.addEventListener('click',()=
   document.getElementById('view-drums').style.display=tabName==='drums'?'flex':'none';
   document.getElementById('view-guitar').style.display=tabName==='guitar'?'flex':'none';
   document.getElementById('view-vocal').style.display=tabName==='vocal'?'flex':'none';
+  document.getElementById('view-handpan').style.display=tabName==='handpan'?'flex':'none';
   if(tabName==='beat-maker') buildBeatMaker();
   if(tabName==='guitar') buildGuitar();
   if(tabName==='vocal') initVocalStudio();
+  if(tabName==='handpan') initHandPan();
 }));
 
 // Piano recording variables
@@ -4996,7 +5383,14 @@ playBtn.addEventListener('click',async()=>{
   if(isPlaying){stopPlay();isPlaying=false;playBtn.classList.remove('active');playBtn.querySelector('.play-icon').textContent='▶';}
   else{await startPlay();isPlaying=true;playBtn.classList.add('active');playBtn.querySelector('.play-icon').textContent='⏸';startViz();}
 });
-document.getElementById('btn-stop').addEventListener('click',()=>{stopPlay();isPlaying=false;playBtn.classList.remove('active');playBtn.querySelector('.play-icon').textContent='▶';});
+document.getElementById('btn-stop').addEventListener('click',()=>{
+  stopPlay();isPlaying=false;playBtn.classList.remove('active');playBtn.querySelector('.play-icon').textContent='▶';
+  // Reset bat wings to base speed
+  clearTimeout(window._batFlapTimer);
+  const wl=document.getElementById('wing-left'),wr=document.getElementById('wing-right');
+  if(wl){wl.style.animationDuration='0.55s';}
+  if(wr){wr.style.animationDuration='0.55s';}
+});
 const bpmSlider=document.getElementById('bpm-slider'),bpmVal=document.getElementById('bpm-val');
 bpmSlider.addEventListener('input',e=>{bpm=+e.target.value;bpmVal.textContent=bpm;});
 let tapTimes=[];
@@ -5174,7 +5568,7 @@ function getPaymentExpiry(){ try{ return +localStorage.getItem('gigo_paid_until'
 function setPaymentExpiry(ms){ try{ localStorage.setItem('gigo_paid_until',ms); }catch(e){} }
 function isPaid(){
   if(!currentUser?.createdAt) return false;
-  if(Date.now()-currentUser.createdAt < 24*60*60*1000) return true;
+  if(Date.now()-currentUser.createdAt < 7*24*60*60*1000) return true; // 1 week free trial
   return Date.now() < getPaymentExpiry();
 }
 function checkPaymentStatus(){
@@ -5186,7 +5580,11 @@ function checkPaymentStatus(){
 }
 function hoursUntilPaywall(){
   if(!currentUser?.createdAt) return 0;
-  return Math.max(0, 24-(Date.now()-currentUser.createdAt)/(1000*60*60));
+  return Math.max(0, 168-(Date.now()-currentUser.createdAt)/(1000*60*60)); // 168h = 1 week
+}
+function daysUntilTrialEnd(){
+  if(!currentUser?.createdAt) return 0;
+  return Math.max(0, Math.ceil(7 - (Date.now()-currentUser.createdAt)/(1000*60*60*24)));
 }
 function daysUntilExpiry(){
   const exp = getPaymentExpiry();
@@ -5221,13 +5619,10 @@ async function fbSignOut(){
 }
 
 // ── Login modal ──
-document.getElementById('btn-login').addEventListener('click', () => {
-  if(currentUser){
-    if(confirm('Sign out of '+currentUser.email+'?')){ fbSignOut(); }
-    return;
-  }
-  loginModal.classList.add('open');
-});
+// btn-login may still exist in paywall / export flows — keep it hidden but functional
+const _oldLoginEl = document.getElementById('btn-login');
+if(_oldLoginEl) _oldLoginEl.style.display='none';
+
 
 document.getElementById('btn-guest').addEventListener('click', () => {
   saveUser({ name:'Guest', email:'guest@gigo.com', role:'guest', createdAt:Date.now() });
@@ -5292,7 +5687,7 @@ document.getElementById('btn-signup').addEventListener('click', async () => {
       saveUser(user);
       loginModal.classList.remove('open');
       updateLoginButton();
-      showToast('🎉 Account created! First 24h free — enjoy!');
+      showToast('🎉 Account created! First week FREE — enjoy!');
       startFreeCountdown();
     }
   } catch(err){
@@ -5322,33 +5717,16 @@ function lsLoadAccount(email, pw){
 }
 
 function updateLoginButton(){
-  const loginBtn = document.getElementById('btn-login');
-  if(!currentUser){
-    loginBtn.textContent='👤 Login';
-    loginBtn.style.background='';
-    loginBtn.style.borderColor='';
-    loginBtn.style.boxShadow='';
-    return;
-  }
-  if(isGuestUser()){
-    loginBtn.textContent='👤 Guest';
-    loginBtn.style.background='rgba(100,100,100,.2)';
-  } else {
-    const h = hoursUntilPaywall();
-    const d = daysUntilExpiry();
-    const tag = h>0 ? ` ⏱ ${Math.ceil(h)}h free` : d>0 ? ` ✅ ${d}d left` : isPaid() ? ' ✅' : ' 🔒';
-    loginBtn.textContent = '👤 '+currentUser.name+tag;
-    loginBtn.style.background='rgba(159,0,255,.3)';
-  }
+  // Redirect to updateAccountButton — the old btn-login is hidden
+  if(typeof updateAccountButton === 'function') updateAccountButton();
 }
 
 function startFreeCountdown(){
-  // Update button every minute to show remaining free time
   const iv = setInterval(()=>{
     if(!currentUser || isGuestUser()){ clearInterval(iv); return; }
-    updateLoginButton();
+    updateAccountButton();
     if(hoursUntilPaywall()<=0) clearInterval(iv);
-  }, 60000);
+  }, 60*60000); // check every hour for 1-week trial
 }
 if(currentUser && isLoggedInUser()) startFreeCountdown();
 
@@ -5386,7 +5764,7 @@ function showPaywall(onGranted){
 // Paywall buttons
 document.getElementById('paywall-close').addEventListener('click', ()=>{
   paywallModal.classList.remove('open');
-  showToast('Export locked — $1/day unlocks it');
+  showToast('Export locked — $3/week unlocks it');
 });
 
 document.getElementById('paypal-manual-btn').addEventListener('click', ()=>{
@@ -5396,7 +5774,7 @@ document.getElementById('paypal-manual-btn').addEventListener('click', ()=>{
 
 function openPayPalPayment(){
   // PayPal.me link — replace YOUR_PAYPAL with your actual PayPal.me username
-  const PAYPAL_ME = 'https://www.paypal.com/paypalme/diorarlone/1';
+  const PAYPAL_ME = 'https://www.paypal.com/paypalme/diorarlone/3';
   // Open PayPal in new window
   const win = window.open(PAYPAL_ME, '_blank', 'width=500,height=700');
   // Poll for window close = assume payment done
@@ -6676,7 +7054,12 @@ async function vtAddToSequencer(rec){
       group: 'VOCAL TAKES'
     };
 
-    // sampleBufs[trackId] already set above — no need to re-assign
+    // Compute clip length in steps from audio duration + current BPM
+    const audioDur = sampleBufs[trackId]?.duration || 1;
+    const stepSecs = (60 / bpm) / 4; // 16th note duration
+    const clipLen = Math.max(1, Math.min(STEPS, Math.round(audioDur / stepSecs)));
+    clipState[trackId] = { startStep: 0, lengthSteps: clipLen };
+
     AVAILABLE_TRACKS.push(newTrack);
     TRACKS.push(newTrack);
     pattern.push(Array(STEPS).fill(0));
@@ -6686,7 +7069,7 @@ async function vtAddToSequencer(rec){
 
     buildGrid(); refreshGrid();
 
-    // Auto-enable first beat so user hears it immediately when playback runs
+    // Place trigger at step 0
     const newTi = TRACKS.length - 1;
     if(pattern[newTi]) pattern[newTi][0] = 1;
     refreshGrid();
@@ -7404,14 +7787,18 @@ showToast('🦇 Gigo v4 — Add tracks to start making beats!');
     const wl = document.getElementById('wing-left');
     const wr = document.getElementById('wing-right');
     const batSvg = document.getElementById('bat-svg');
-    if(wl && wr){
-      // speed up flap on beat
-      const dur = (step % 2 === 0) ? '0.18s' : '0.55s';
-      wl.style.animationDuration = dur;
-      wr.style.animationDuration = dur;
+    if(wl && wr && step % 4 === 0){
+      // Brief fast-flap on every bar, then return to base speed
+      wl.style.animationDuration = '0.18s';
+      wr.style.animationDuration = '0.18s';
+      clearTimeout(window._batFlapTimer);
+      window._batFlapTimer = setTimeout(()=>{
+        wl.style.animationDuration = '0.55s';
+        wr.style.animationDuration = '0.55s';
+      }, 200);
     }
     if(batSvg && step % 4 === 0){
-      batSvg.style.filter = 'drop-shadow(0 0 16px #BF40FF) drop-shadow(0 0 36px rgba(159,0,255,.8))';
+      batSvg.style.filter = 'drop-shadow(0 0 16px var(--accent)) drop-shadow(0 0 36px rgba(255,140,0,.7))';
       setTimeout(()=>{ batSvg.style.filter = ''; }, 150);
     }
   };
@@ -8041,6 +8428,855 @@ async function addGuitarToSequencer(recOrIdx){
   showToast('🎸 "'+track.label+'" added to sequencer!');
   setTimeout(()=>switchView('seq'),600);
 }
+// ═══════════════════════════════════════════════════════
+//  HAND PAN — Virtual Steel Tongue Drum / Hand Pan
+// ═══════════════════════════════════════════════════════
+const HP_SCALES = {
+  d_minor:    { name:'D Minor Kurd', notes:['D3','A3','Bb3','C4','D4','E4','F4','G4','A4','C5'] },
+  d_major:    { name:'D Major',      notes:['D3','A3','B3','C#4','D4','E4','F#4','A4','B4','D5'] },
+  e_minor:    { name:'E Minor',      notes:['E3','B3','C4','D4','E4','F#4','G4','A4','B4','D5'] },
+  a_minor:    { name:'A Minor',      notes:['A3','E4','F4','G4','A4','B4','C5','D5','E5','G5'] },
+  c_major:    { name:'C Major',      notes:['C3','G3','A3','B3','C4','D4','E4','F4','G4','A4'] },
+  pentatonic: { name:'Pentatonic',   notes:['D3','F3','G3','A3','C4','D4','F4','G4','A4','C5'] },
+  integral:   { name:'Integral',     notes:['C3','G3','A3','B3','C4','E4','F4','G4','A4','B4'] },
+  hijaz:      { name:'Hijaz',        notes:['D3','Eb3','F#3','G3','A3','Bb3','C4','D4','Eb4','F#4'] },
+};
+
+// Note → frequency
+function hpNoteToHz(note){
+  const map={C:0,'C#':1,Db:1,D:2,'D#':3,Eb:3,E:4,F:5,'F#':6,Gb:6,G:7,'G#':8,Ab:8,A:9,'A#':10,Bb:10,B:11};
+  const m = note.match(/^([A-G]#?b?)(\d)$/);
+  if(!m) return 220;
+  const semi = map[m[1]] ?? 0;
+  const oct  = parseInt(m[2]);
+  return 440 * Math.pow(2, (semi - 9 + (oct - 4) * 12) / 12);
+}
+
+let hpInited = false;
+let hpScaleKey = 'd_minor';
+let hpResonanceKey = 'warm';
+let hpReverbEnabled = true;
+let hpRecording = false;
+let hpRecBuf = [];
+let hpRecStart = 0;
+let hpRecTimerIv = null;
+let hpReverbNode = null;
+
+// Build reverb impulse
+function hpMakeReverb(ctx, secs=2.4, decay=2){
+  const sr = ctx.sampleRate;
+  const len = sr * secs;
+  const buf = ctx.createBuffer(2, len, sr);
+  for(let ch=0;ch<2;ch++){
+    const d = buf.getChannelData(ch);
+    for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len, decay);
+  }
+  const conv = ctx.createConvolver();
+  conv.buffer = buf;
+  return conv;
+}
+
+async function hpPlayNote(freq, resonance, useReverb){
+  initAudio();
+  await resumeAC();
+  if(!AC) return;
+  try{
+    const t = AC.currentTime;
+    const res = {
+      warm:     { q:55,  atk:.001, rel:2.8, gain:1.0, harmonics:[1,.45,.18,.06] },
+      bright:   { q:80,  atk:.001, rel:2.2, gain:1.1, harmonics:[1,.6,.3,.12,.05] },
+      deep:     { q:40,  atk:.002, rel:3.8, gain:1.3, harmonics:[1,.3,.1,.03] },
+      metallic: { q:120, atk:.001, rel:1.6, gain:0.9, harmonics:[1,.7,.5,.35,.2,.08] },
+    }[resonance] || { q:55, atk:.001, rel:2.8, gain:1.0, harmonics:[1,.45,.18,.06] };
+
+    const masterGain = AC.createGain();
+    masterGain.gain.setValueAtTime(0, t);
+    masterGain.gain.linearRampToValueAtTime(0.35 * res.gain, t + res.atk);
+    masterGain.gain.exponentialRampToValueAtTime(0.001, t + res.rel);
+
+    res.harmonics.forEach((amp, hi) => {
+      if(amp < 0.02) return;
+      const osc = AC.createOscillator();
+      const filt = AC.createBiquadFilter();
+      const g = AC.createGain();
+      osc.type = hi === 0 ? 'sine' : (hi < 2 ? 'sine' : 'triangle');
+      osc.frequency.value = freq * (hi + 1);
+      filt.type = 'bandpass';
+      filt.frequency.value = freq * (hi + 1);
+      filt.Q.value = res.q / (hi + 1);
+      g.gain.value = amp;
+      osc.connect(filt); filt.connect(g); g.connect(masterGain);
+      const safeT = Math.max(AC.currentTime, t); osc.start(safeT); osc.stop(safeT + res.rel + 0.1);
+    });
+
+    // Noise transient for the 'tap' attack
+    const noiseLen = Math.floor(AC.sampleRate * 0.04);
+    const noiseBuf = AC.createBuffer(1, noiseLen, AC.sampleRate);
+    const nd = noiseBuf.getChannelData(0);
+    for(let i=0;i<noiseLen;i++) nd[i]=(Math.random()*2-1)*Math.pow(1-i/noiseLen,3);
+    const noiseSrc = AC.createBufferSource();
+    const noiseGain = AC.createGain();
+    const noiseFilt = AC.createBiquadFilter();
+    noiseSrc.buffer = noiseBuf;
+    noiseFilt.type = 'bandpass'; noiseFilt.frequency.value = freq * 2; noiseFilt.Q.value = 2;
+    noiseGain.gain.value = 0.08;
+    noiseSrc.connect(noiseFilt); noiseFilt.connect(noiseGain); noiseGain.connect(masterGain);
+    noiseSrc.start(Math.max(AC.currentTime, t));
+
+    if(!hpReverbNode && AC) hpReverbNode = hpMakeReverb(AC);
+    if(useReverb && hpReverbNode){
+      masterGain.connect(hpReverbNode);
+      hpReverbNode.connect(MG);
+    } else {
+      masterGain.connect(MG);
+    }
+  } catch(e){ console.warn('HP play error', e); }
+}
+
+// ── Draw the pan ──
+function hpDraw(canvas, notes, activeIdx=-1, ripples=[]){
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2;
+  const R = Math.min(W, H) * 0.46;   // outer shell radius
+  const shellR = R;
+  const gu = Math.min(W, H) * 0.085; // tone field size
+
+  const ctx2 = canvas.getContext('2d');
+  ctx2.clearRect(0,0,W,H);
+
+  // ── Outer shell (the pan body) ──
+  const bodyGrad = ctx2.createRadialGradient(cx, cy-R*0.15, R*0.1, cx, cy, R*1.1);
+  bodyGrad.addColorStop(0,  '#3a2200');
+  bodyGrad.addColorStop(0.5,'#1e1000');
+  bodyGrad.addColorStop(1,  '#0a0500');
+  ctx2.beginPath();
+  ctx2.arc(cx, cy, shellR, 0, Math.PI*2);
+  ctx2.fillStyle = bodyGrad;
+  ctx2.fill();
+
+  // Rim glow
+  ctx2.beginPath();
+  ctx2.arc(cx, cy, shellR, 0, Math.PI*2);
+  ctx2.strokeStyle = 'rgba(255,140,0,0.55)';
+  ctx2.lineWidth = 3;
+  ctx2.stroke();
+
+  // Inner dome highlight
+  const domeGrad = ctx2.createRadialGradient(cx-R*0.12, cy-R*0.18, R*0.05, cx, cy, R*0.55);
+  domeGrad.addColorStop(0,  'rgba(255,180,60,0.18)');
+  domeGrad.addColorStop(0.5,'rgba(255,100,0,0.06)');
+  domeGrad.addColorStop(1,  'rgba(0,0,0,0)');
+  ctx2.beginPath();
+  ctx2.arc(cx, cy, shellR*0.92, 0, Math.PI*2);
+  ctx2.fillStyle = domeGrad;
+  ctx2.fill();
+
+  // ── Tone fields ──
+  // Layout: 1 center (ding) + 8 around ring + 1 extra outer
+  const count = notes.length;
+  const ringCount = Math.min(count - 1, 8);
+  const ringR = R * 0.56;
+
+  // Positions: center first, then ring
+  const positions = [];
+  positions.push({x: cx, y: cy}); // Ding (center)
+  for(let i = 0; i < ringCount; i++){
+    const angle = (i / ringCount) * Math.PI * 2 - Math.PI/2;
+    positions.push({ x: cx + Math.cos(angle)*ringR, y: cy + Math.sin(angle)*ringR });
+  }
+  if(count > ringCount + 1){
+    // Extra note at outer ring
+    const angle = Math.PI / 2;
+    positions.push({ x: cx + Math.cos(angle)*(R*0.82), y: cy + Math.sin(angle)*(R*0.82) });
+  }
+
+  positions.forEach((pos, i) => {
+    if(i >= count) return;
+    const note = notes[i];
+    const isActive = i === activeIdx;
+    const isDing = i === 0;
+    const fieldR = isDing ? gu * 1.25 : gu;
+
+    // Ripple effect
+    ripples.filter(r=>r.idx===i).forEach(r=>{
+      const alpha = Math.max(0, 1 - r.age/18);
+      const rr = fieldR + r.age * 3.5;
+      ctx2.beginPath();
+      ctx2.arc(pos.x, pos.y, rr, 0, Math.PI*2);
+      ctx2.strokeStyle = `rgba(255,180,60,${alpha*0.7})`;
+      ctx2.lineWidth = 2;
+      ctx2.stroke();
+    });
+
+    // Field shadow / depth
+    ctx2.beginPath();
+    const ellH = isDing ? fieldR*2.1 : fieldR*2.05;
+    ctx2.ellipse(pos.x, pos.y+3, fieldR*0.95, fieldR*0.55, 0, 0, Math.PI*2);
+    ctx2.fillStyle='rgba(0,0,0,0.45)';
+    ctx2.fill();
+
+    // Field body (oval dent)
+    const fg = ctx2.createRadialGradient(pos.x-fieldR*.2, pos.y-fieldR*.25, fieldR*.05,
+                                          pos.x, pos.y, fieldR);
+    if(isActive){
+      fg.addColorStop(0, '#ffcc44');
+      fg.addColorStop(0.5,'#ff8c00');
+      fg.addColorStop(1,  '#5a2d00');
+    } else {
+      fg.addColorStop(0, '#6a3a10');
+      fg.addColorStop(0.45,'#3a1800');
+      fg.addColorStop(1,  '#1a0800');
+    }
+    ctx2.beginPath();
+    ctx2.ellipse(pos.x, pos.y, fieldR, fieldR*0.6, 0, 0, Math.PI*2);
+    ctx2.fillStyle = fg;
+    ctx2.fill();
+
+    // Field border
+    ctx2.beginPath();
+    ctx2.ellipse(pos.x, pos.y, fieldR, fieldR*0.6, 0, 0, Math.PI*2);
+    ctx2.strokeStyle = isActive ? 'rgba(255,200,80,0.9)' : 'rgba(255,140,0,0.35)';
+    ctx2.lineWidth = isActive ? 2.5 : 1.5;
+    ctx2.stroke();
+
+    // Note label
+    ctx2.fillStyle = isActive ? '#fff' : 'rgba(255,200,120,0.82)';
+    ctx2.font = `bold ${isDing ? Math.floor(fieldR*0.55) : Math.floor(fieldR*0.5)}px Orbitron, monospace`;
+    ctx2.textAlign = 'center';
+    ctx2.textBaseline = 'middle';
+    const label = note.replace(/\d/,'');
+    ctx2.fillText(label, pos.x, pos.y - fieldR*0.05);
+    // Octave subscript
+    ctx2.font = `${Math.floor(fieldR*0.28)}px Rajdhani, sans-serif`;
+    ctx2.fillStyle = isActive ? 'rgba(255,255,255,0.7)' : 'rgba(255,180,80,0.45)';
+    ctx2.fillText(note.match(/\d/)?.[0]||'', pos.x + fieldR*0.32, pos.y + fieldR*0.22);
+  });
+
+  // Ding label center ring decoration
+  ctx2.beginPath();
+  ctx2.arc(cx, cy, gu*1.55, 0, Math.PI*2);
+  ctx2.strokeStyle='rgba(255,140,0,0.18)';
+  ctx2.lineWidth=1;
+  ctx2.stroke();
+
+  return positions;
+}
+
+// ── Main init ──
+let hpPositions = [];
+let hpRipples = [];
+let hpRafId = null;
+let hpActiveIdx = -1;
+let hpActiveTimer = null;
+let hpInitDone = false;
+
+async function initHandPan(){
+  if(hpInitDone){ hpResizeCanvas(); return; }
+  hpInitDone = true;
+
+  // Ensure audio context is running
+  initAudio();
+  await resumeAC();
+  // Build reverb once (must be after AC is ready)
+  if(!hpReverbNode && AC) hpReverbNode = hpMakeReverb(AC);
+
+  const canvas = document.getElementById('hp-canvas');
+  const scaleSel = document.getElementById('hp-scale');
+  const resSel = document.getElementById('hp-resonance');
+  const reverbToggle = document.getElementById('hp-reverb-toggle');
+  const lastNoteEl = document.getElementById('hp-last-note');
+  const recBtn = document.getElementById('hp-record-btn');
+  const addSeqBtn = document.getElementById('hp-add-seq-btn');
+  const recTimer = document.getElementById('hp-rec-timer');
+
+  function hpResizeCanvas(){
+    const wrap = canvas.parentElement;
+    const maxSide = Math.min(wrap.clientWidth, wrap.clientHeight, 520);
+    canvas.width = maxSide;
+    canvas.height = maxSide;
+    const notes = HP_SCALES[hpScaleKey].notes;
+    hpPositions = hpDraw(canvas, notes, -1, []);
+  }
+  hpResizeCanvas();
+  window.hpResizeCanvas = hpResizeCanvas;
+
+  // Resize observer
+  const ro = new ResizeObserver(()=>hpResizeCanvas());
+  ro.observe(canvas.parentElement);
+
+  // Animation loop for ripples
+  function hpAnimate(){
+    hpRipples.forEach(r=>r.age++);
+    hpRipples = hpRipples.filter(r=>r.age<22);
+    const notes = HP_SCALES[hpScaleKey].notes;
+    hpPositions = hpDraw(canvas, notes, hpActiveIdx, hpRipples);
+    hpRafId = requestAnimationFrame(hpAnimate);
+  }
+  hpAnimate();
+
+  function hpHit(px, py){
+    const notes = HP_SCALES[hpScaleKey].notes;
+    // Find closest field
+    let best = -1, bestD = Infinity;
+    hpPositions.forEach((pos, i)=>{
+      if(i >= notes.length) return;
+      const d = Math.hypot(px - pos.x, py - pos.y);
+      const isDing = i === 0;
+      const fieldR = (Math.min(canvas.width, canvas.height) * 0.085) * (isDing ? 1.25 : 1);
+      if(d < fieldR * 1.3 && d < bestD){ bestD = d; best = i; }
+    });
+    if(best < 0) return;
+
+    const note = notes[best];
+    const freq = hpNoteToHz(note);
+    hpPlayNote(freq, hpResonanceKey, hpReverbEnabled); // fire and forget — async internally
+
+    hpActiveIdx = best;
+    hpRipples.push({ idx: best, age: 0 });
+    if(hpActiveTimer) clearTimeout(hpActiveTimer);
+    hpActiveTimer = setTimeout(()=>{ hpActiveIdx = -1; }, 350);
+
+    if(lastNoteEl) lastNoteEl.textContent = note;
+
+    // Record
+    if(hpRecording){
+      hpRecBuf.push({ t: AC.currentTime - hpRecStart, freq, note });
+    }
+  }
+
+  // Mouse
+  canvas.addEventListener('mousedown', e=>{
+    const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / r.width;
+    const scaleY = canvas.height / r.height;
+    hpHit((e.clientX - r.left)*scaleX, (e.clientY - r.top)*scaleY);
+  });
+
+  // Touch — multi-touch support
+  canvas.addEventListener('touchstart', e=>{
+    e.preventDefault();
+    const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / r.width;
+    const scaleY = canvas.height / r.height;
+    Array.from(e.changedTouches).forEach(touch=>{
+      hpHit((touch.clientX - r.left)*scaleX, (touch.clientY - r.top)*scaleY);
+    });
+  }, { passive: false });
+
+  // Scale change
+  scaleSel.addEventListener('change', ()=>{
+    hpScaleKey = scaleSel.value;
+    hpPositions = hpDraw(canvas, HP_SCALES[hpScaleKey].notes, -1, []);
+  });
+  resSel.addEventListener('change', ()=>{ hpResonanceKey = resSel.value; });
+  reverbToggle.addEventListener('change', ()=>{ hpReverbEnabled = reverbToggle.checked; });
+
+  // Record
+  recBtn.addEventListener('click', ()=>{
+    if(!hpRecording){
+      hpRecording = true;
+      hpRecBuf = [];
+      hpRecStart = AC ? AC.currentTime : 0;
+      recBtn.textContent = '⏹ STOP';
+      recBtn.style.background='rgba(255,60,60,.45)';
+      recTimer.style.display='inline';
+      addSeqBtn.style.display='none';
+      let secs=0;
+      hpRecTimerIv = setInterval(()=>{
+        secs++;
+        recTimer.textContent = Math.floor(secs/60)+':'+(secs%60<10?'0':'')+secs%60;
+      },1000);
+    } else {
+      hpRecording = false;
+      clearInterval(hpRecTimerIv);
+      recBtn.textContent = '⏺ RECORD';
+      recBtn.style.background='rgba(255,60,60,.2)';
+      recTimer.style.display='none';
+      if(hpRecBuf.length > 0) addSeqBtn.style.display='inline';
+    }
+  });
+
+  // Add to sequencer — creates a looping playback sample via OfflineAudioContext
+  addSeqBtn.addEventListener('click', async ()=>{
+    if(!hpRecBuf.length){ showToast('No notes recorded!', true); return; }
+    showToast('🎵 Rendering hand pan loop…');
+    addSeqBtn.disabled = true;
+
+    try{
+      const dur = Math.max(...hpRecBuf.map(n=>n.t)) + 3.5;
+      const sr = 44100;
+      const off = new OfflineAudioContext(2, Math.ceil(sr*dur), sr);
+      const revOff = hpMakeReverb(off);
+      revOff.connect(off.destination);
+
+      hpRecBuf.forEach(({t, freq})=>{
+        const res = { q:55, atk:.001, rel:2.8, gain:1.0, harmonics:[1,.45,.18,.06] };
+        const mg = off.createGain();
+        mg.gain.setValueAtTime(0, t);
+        mg.gain.linearRampToValueAtTime(0.32, t+res.atk);
+        mg.gain.exponentialRampToValueAtTime(0.001, t+res.rel);
+        res.harmonics.forEach((amp,hi)=>{
+          if(amp<0.02) return;
+          const osc=off.createOscillator(); const g=off.createGain();
+          osc.type='sine'; osc.frequency.value=freq*(hi+1); g.gain.value=amp;
+          osc.connect(g); g.connect(mg); osc.start(t); osc.stop(t+res.rel+.1);
+        });
+        mg.connect(revOff);
+      });
+
+      const rendered = await off.startRendering();
+      // Encode to WAV
+      const wavBlob = audioBufferToWav(rendered);
+      const ab = await wavBlob.slice(0).arrayBuffer();
+      const mainBuf = await AC.decodeAudioData(ab);
+
+      const recId = 'hp_'+Date.now();
+      sampleBufs[recId] = mainBuf;
+
+      // Clip length = actual rendered audio duration in 16th-note steps
+      const hpStepSecs = (60 / bpm) / 4;
+      const hpClipLen = Math.max(1, Math.min(STEPS, Math.round(mainBuf.duration / hpStepSecs)));
+      clipState[recId] = { startStep: 0, lengthSteps: hpClipLen };
+
+      const newTrack = {
+        id: recId, label:'Hand Pan Loop', emoji:'🎵',
+        sound:'userSample', color:'#FF8C00',
+        params:{volume:1}, group:'VOCAL TAKES'
+      };
+      AVAILABLE_TRACKS.push(newTrack);
+      TRACKS.push(newTrack);
+      pattern.push(Array(STEPS).fill(0));
+      velocities.push(Array(STEPS).fill(100));
+      trackMutes.push(false); trackSolos.push(false);
+      const ti = TRACKS.length-1;
+      pattern[ti][0]=1;
+      buildGrid(); refreshGrid();
+      showToast('🎵 Hand pan loop added to sequencer!');
+      addSeqBtn.style.display='none';
+      addSeqBtn.disabled=false;
+      setTimeout(()=>switchView('seq'),500);
+    } catch(e){
+      console.error('HP render error',e);
+      showToast('Render failed: '+e.message, true);
+      addSeqBtn.disabled=false;
+    }
+  });
+}
+
+// ══════════════════════════════════════════════
+//  ACCOUNT MODAL
+// ══════════════════════════════════════════════
+const accountModal = document.getElementById('account-modal');
+const acctBtn = document.getElementById('btn-account');
+
+function openAccountModal(){
+  acctSwitchTab('profile');
+  refreshAccountModal();
+  accountModal.classList.add('open');
+}
+accountModal.addEventListener('click', e=>{
+  if(e.target === accountModal) accountModal.classList.remove('open');
+});
+acctBtn.addEventListener('click', openAccountModal);
+
+function acctSwitchTab(tab){
+  document.querySelectorAll('.acct-tab').forEach(t=>{
+    const active = t.dataset.acctTab === tab;
+    t.style.color = active ? 'var(--accent)' : 'var(--text-muted)';
+    t.style.borderBottomColor = active ? 'var(--accent)' : 'transparent';
+  });
+  document.querySelectorAll('.acct-tab-pane').forEach(p=>p.style.display='none');
+  const pane = document.getElementById('acct-tab-'+tab);
+  if(pane) pane.style.display='block';
+  if(tab==='plan') refreshPlanTab();
+}
+document.querySelectorAll('.acct-tab').forEach(t=>{
+  t.addEventListener('click', ()=> acctSwitchTab(t.dataset.acctTab));
+});
+
+function refreshAccountModal(){
+  const loggedIn = document.getElementById('acct-loggedin');
+  const loggedOut = document.getElementById('acct-loggedout');
+  const nameEl  = document.getElementById('acct-name');
+  const emailEl = document.getElementById('acct-email');
+  const dispName= document.getElementById('acct-display-name');
+  const dispEmail=document.getElementById('acct-display-email');
+  const statusEl= document.getElementById('acct-status-text');
+
+  if(currentUser && !isGuestUser()){
+    loggedIn.style.display='block';
+    loggedOut.style.display='none';
+    nameEl.textContent  = currentUser.name || currentUser.email?.split('@')[0] || 'Producer';
+    emailEl.textContent = currentUser.email || '';
+    dispName.textContent = currentUser.name || '';
+    dispEmail.textContent= currentUser.email || '';
+
+    const h = hoursUntilPaywall();
+    const d = daysUntilExpiry();
+    if(h > 0){
+      const dLeft = Math.ceil(h/24);
+      statusEl.textContent = '🆓 Free trial — ' + dLeft + ' day' + (dLeft!==1?'s':'') + ' left';
+      statusEl.style.color = '#00ff88';
+    } else if(d > 0){
+      statusEl.textContent = '⭐ Pro — ' + d + ' day' + (d!==1?'s':'') + ' remaining';
+      statusEl.style.color = 'var(--accent)';
+    } else if(Date.now() < getPaymentExpiry()){
+      statusEl.textContent = '⭐ Pro — Active';
+      statusEl.style.color = 'var(--accent)';
+    } else {
+      statusEl.textContent = '🔒 Trial ended — upgrade to export';
+      statusEl.style.color = '#ff6666';
+    }
+  } else {
+    loggedIn.style.display='none';
+    loggedOut.style.display='block';
+    nameEl.textContent = currentUser?.role === 'guest' ? '👤 Guest' : '👤 Not signed in';
+    emailEl.textContent = '';
+  }
+}
+
+function refreshPlanTab(){
+  const freeEl    = document.getElementById('acct-plan-free');
+  const paidEl    = document.getElementById('acct-plan-paid');
+  const expEl     = document.getElementById('acct-plan-expired');
+  const guestEl   = document.getElementById('acct-plan-guest');
+  const freeRemEl = document.getElementById('acct-free-remaining');
+  const paidRemEl = document.getElementById('acct-paid-remaining');
+  [freeEl,paidEl,expEl,guestEl].forEach(e=>{ if(e) e.style.display='none'; });
+
+  if(!currentUser || isGuestUser()){
+    if(guestEl) guestEl.style.display='block';
+    return;
+  }
+  const h = hoursUntilPaywall();
+  const d = daysUntilExpiry();
+  if(h > 0){
+    if(freeEl){ freeEl.style.display='block'; }
+    if(freeRemEl){
+      const dLeft = Math.ceil(h/24);
+      freeRemEl.textContent = dLeft + ' day' + (dLeft!==1?'s':'') + ' remaining in free trial';
+    }
+  } else if(Date.now() < getPaymentExpiry()){
+    if(paidEl){ paidEl.style.display='block'; }
+    if(paidRemEl){ paidRemEl.textContent = d + ' day' + (d!==1?'s':'') + ' remaining'; }
+  } else {
+    if(expEl){ expEl.style.display='block'; }
+  }
+}
+
+// Account modal auth handlers
+document.getElementById('acct-signin-btn').addEventListener('click', async()=>{
+  const email = document.getElementById('acct-login-email').value.trim();
+  const pw    = document.getElementById('acct-login-pw').value;
+  const msg   = document.getElementById('acct-auth-msg');
+  if(!email||!pw){ msg.textContent='Enter email and password'; msg.style.color='#ff6666'; return; }
+  const btn = document.getElementById('acct-signin-btn');
+  btn.textContent='Signing in…'; btn.disabled=true;
+  try{
+    if(window.fbAuth && window.fbFns){
+      await fbSignIn(email, pw);
+    } else {
+      const existing = lsLoadAccount(email, pw);
+      if(!existing){ msg.textContent='Account not found — Sign Up first'; msg.style.color='#ff6666'; return; }
+      saveUser(existing); updateAccountButton(); refreshAccountModal();
+      msg.textContent='Welcome back, '+existing.name+'!'; msg.style.color='#00ff88';
+    }
+  } catch(err){
+    const m = err.code==='auth/invalid-credential'?'Email or password incorrect'
+            : err.code==='auth/user-not-found'?'No account found — Sign Up'
+            : err.message;
+    msg.textContent='❌ '+m; msg.style.color='#ff6666';
+  } finally { btn.textContent='SIGN IN'; btn.disabled=false; }
+});
+
+document.getElementById('acct-signup-btn').addEventListener('click', async()=>{
+  const email = document.getElementById('acct-login-email').value.trim();
+  const pw    = document.getElementById('acct-login-pw').value;
+  const msg   = document.getElementById('acct-auth-msg');
+  if(!email||!pw){ msg.textContent='Enter email and password'; msg.style.color='#ff6666'; return; }
+  if(pw.length<6){ msg.textContent='Password must be 6+ characters'; msg.style.color='#ff6666'; return; }
+  const btn = document.getElementById('acct-signup-btn');
+  btn.textContent='Creating…'; btn.disabled=true;
+  const name = email.split('@')[0];
+  try{
+    if(window.fbAuth && window.fbFns){
+      await fbSignUp(email, pw, name);
+    } else {
+      const user={name,email,role:'user',createdAt:Date.now()};
+      lsSaveAccount(email,pw,user); saveUser(user);
+      updateAccountButton(); refreshAccountModal();
+      msg.textContent='Account created! 1 week free trial started 🎉'; msg.style.color='#00ff88';
+    }
+  } catch(err){
+    const m = err.code==='auth/email-already-in-use'?'Email already registered — Sign In'
+            : err.code==='auth/weak-password'?'Password too weak'
+            : err.message;
+    msg.textContent='❌ '+m; msg.style.color='#ff6666';
+  } finally { btn.textContent='SIGN UP'; btn.disabled=false; }
+});
+
+document.getElementById('acct-guest-btn').addEventListener('click',()=>{
+  saveUser({name:'Guest',email:'guest@gigo.com',role:'guest',createdAt:Date.now()});
+  accountModal.classList.remove('open');
+  updateAccountButton();
+  showToast('👤 Guest mode active');
+});
+
+// Payment in account modal
+document.getElementById('acct-paypal-btn').addEventListener('click',()=>{
+  const PAYPAL_ME = 'https://www.paypal.com/paypalme/diorarlone/3';
+  const win = window.open(PAYPAL_ME,'_blank','width=520,height=700');
+  document.getElementById('acct-pay-confirm').style.display='block';
+  showToast('💳 Complete payment in the PayPal window…');
+  if(win){
+    const poll = setInterval(()=>{
+      if(win.closed){ clearInterval(poll);
+        document.getElementById('acct-pay-confirm').style.display='block';
+      }
+    },800);
+  }
+});
+document.getElementById('acct-confirm-paid-btn').addEventListener('click',()=>{
+  const expiry = Date.now() + 7*24*60*60*1000;
+  setPaymentExpiry(expiry);
+  document.getElementById('acct-pay-confirm').style.display='none';
+  showToast('✅ Payment confirmed! Export unlocked for 7 days 🎉');
+  updateAccountButton(); refreshAccountModal(); acctSwitchTab('plan');
+  // Resume any blocked export
+  if(paywallModal._onGranted){ paywallModal._onGranted(); paywallModal._onGranted=null; }
+  paywallModal.classList.remove('open');
+});
+
+// ── Account button state ──
+function updateAccountButton(){
+  const btn = document.getElementById('btn-account');
+  if(!btn) return;
+  btn.className = 'btn-icon btn-account';
+  if(!currentUser){ btn.textContent='👤'; return; }
+  if(isGuestUser()){ btn.textContent='👤'; return; }
+  const h = hoursUntilPaywall();
+  const paid = Date.now() < getPaymentExpiry();
+  if(h > 0){
+    btn.textContent='🆓'; btn.classList.add('trial');
+    btn.title = Math.ceil(h/24)+'d free trial left';
+  } else if(paid){
+    btn.textContent='⭐'; btn.classList.add('paid');
+    btn.title = daysUntilExpiry()+'d pro remaining';
+  } else {
+    btn.textContent='🔒'; btn.classList.add('expired');
+    btn.title = 'Trial ended — upgrade';
+  }
+}
+
+// Hook onFbLogin / onFbLogout to refresh account button
+const _origOnFbLogin  = window.onFbLogin;
+const _origOnFbLogout = window.onFbLogout;
+window.onFbLogin  = function(user){ if(_origOnFbLogin) _origOnFbLogin(user); updateAccountButton(); refreshAccountModal(); };
+window.onFbLogout = function(){     if(_origOnFbLogout)_origOnFbLogout();   updateAccountButton(); };
+
+// Initial state
+updateAccountButton();
+
+// ══════════════════════════════════════════════════════
+//  CLIP / SAMPLE TRACK RENDERING + DRAG/RESIZE
+// ══════════════════════════════════════════════════════
+
+// Per-track clip state: { startStep, lengthSteps }
+const clipState = {};
+
+function getClipState(ti, tr){
+  if(!clipState[tr.id]){
+    // Compute from actual audio duration if available
+    const buf = sampleBufs[tr.id];
+    let defLen;
+    if(buf && buf.duration){
+      const stepSecs = (60 / bpm) / 4; // 16th note at current BPM
+      defLen = Math.max(1, Math.min(STEPS, Math.round(buf.duration / stepSecs)));
+    } else {
+      defLen = Math.min(16, STEPS);
+    }
+    let firstOn = pattern[ti] ? pattern[ti].findIndex(v=>v) : 0;
+    if(firstOn < 0) firstOn = 0;
+    clipState[tr.id] = { startStep: firstOn, lengthSteps: defLen };
+  }
+  // Clamp to STEPS
+  const s = clipState[tr.id];
+  s.startStep = Math.max(0, Math.min(s.startStep, STEPS-1));
+  s.lengthSteps = Math.max(1, Math.min(s.lengthSteps, STEPS - s.startStep));
+  return s;
+}
+
+function buildClipRow(tr, ti){
+  const row = document.createElement('div');
+  row.className = 'step-row clip-row';
+  row.style.width = (STEPS * getStepW()) + 'px';
+  row.style.minWidth = 'max-content';
+
+  // Lane background grid
+  const laneBg = document.createElement('div');
+  laneBg.className = 'clip-lane-bg';
+  for(let s=0; s<STEPS; s++){
+    const cell = document.createElement('div');
+    cell.className = 'clip-lane-beat';
+    cell.style.width = getStepW() + 'px';
+    laneBg.appendChild(cell);
+  }
+  row.appendChild(laneBg);
+
+  // Clip wrap
+  const wrap = document.createElement('div');
+  wrap.className = 'clip-track-wrap';
+  wrap.style.width = (STEPS * getStepW()) + 'px';
+  row.appendChild(wrap);
+
+  renderClipBlock(wrap, tr, ti);
+  return row;
+}
+
+function getStepW(){
+  // Get actual rendered step width
+  const sw = getComputedStyle(document.documentElement).getPropertyValue('--step-w');
+  return parseInt(sw) || 38;
+}
+
+function renderClipBlock(wrap, tr, ti){
+  wrap.innerHTML = '';
+  const sw = getStepW();
+  const cs = getClipState(ti, tr);
+
+  // Draw mini waveform bars (random seed from track id)
+  const waveH = 24;
+  const waveW = cs.lengthSteps * sw;
+  const svg = `<svg class="clip-waveform" viewBox="0 0 ${waveW} ${waveH}" preserveAspectRatio="none">
+    ${Array.from({length: Math.floor(waveW/4)}, (_,i)=>{
+      // Pseudo-random amplitude from track id hash
+      const h = ((tr.id.charCodeAt(i%tr.id.length||1) * 37 + i * 13) % 80 + 20);
+      const y = (waveH - h/100*waveH)/2;
+      return `<rect x="${i*4}" y="${y}" width="3" height="${h/100*waveH}" fill="rgba(255,255,255,0.6)" rx="1"/>`;
+    }).join('')}
+  </svg>`;
+
+  const block = document.createElement('div');
+  block.className = 'clip-block';
+  block.style.setProperty('--clip-col', tr.color);
+  block.style.left = (cs.startStep * sw) + 'px';
+  block.style.width = (cs.lengthSteps * sw) + 'px';
+  block.style.background = `linear-gradient(135deg, ${tr.color}cc 0%, ${tr.color}55 100%)`;
+
+  // Compute real duration info for tooltip
+  const cbuf = sampleBufs[tr.id];
+  const durStr = cbuf ? cbuf.duration.toFixed(1)+'s' : '';
+  const stepsStr = cs.lengthSteps + ' steps';
+  const blockTitle = tr.label + (durStr ? ' · ' + durStr + ' · ' + stepsStr : '');
+
+  block.innerHTML = `
+    <div class="clip-handle clip-handle-left" title="Drag left edge to move start"></div>
+    ${svg}
+    <span class="clip-label" title="${blockTitle}">${tr.emoji} ${tr.label}${durStr ? ' <span style=\"opacity:.6;font-size:.5rem\">' + durStr + '</span>' : ''}</span>
+    <div class="clip-handle clip-handle-right" title="Drag right edge to resize"></div>
+  `;
+
+  // ── Drag to MOVE clip ──
+  let dragData = null;
+  block.addEventListener('mousedown', e=>{
+    if(e.target.classList.contains('clip-handle')) return;
+    e.preventDefault();
+    const startX = e.clientX;
+    const origStart = cs.startStep;
+    const onMove = mv=>{
+      const dx = mv.clientX - startX;
+      const stepDelta = Math.round(dx / sw);
+      cs.startStep = Math.max(0, Math.min(STEPS - cs.lengthSteps, origStart + stepDelta));
+      syncClipToPattern(ti, tr);
+      block.style.left = (cs.startStep * sw) + 'px';
+    };
+    const onUp = ()=>{ document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+
+  // Touch drag
+  block.addEventListener('touchstart', e=>{
+    if(e.target.classList.contains('clip-handle')) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const startX = touch.clientX;
+    const origStart = cs.startStep;
+    const onMove = mv=>{
+      const dx = mv.touches[0].clientX - startX;
+      const stepDelta = Math.round(dx / sw);
+      cs.startStep = Math.max(0, Math.min(STEPS - cs.lengthSteps, origStart + stepDelta));
+      syncClipToPattern(ti, tr);
+      block.style.left = (cs.startStep * sw) + 'px';
+    };
+    const onEnd = ()=>{ document.removeEventListener('touchmove', onMove); document.removeEventListener('touchend', onEnd); };
+    document.addEventListener('touchmove', onMove, {passive:false});
+    document.addEventListener('touchend', onEnd);
+  }, {passive:false});
+
+  // ── Drag LEFT HANDLE to resize start ──
+  const leftHandle = block.querySelector('.clip-handle-left');
+  leftHandle.addEventListener('mousedown', e=>{
+    e.preventDefault(); e.stopPropagation();
+    const startX = e.clientX;
+    const origStart = cs.startStep;
+    const origLen = cs.lengthSteps;
+    const onMove = mv=>{
+      const dx = mv.clientX - startX;
+      const stepDelta = Math.round(dx / sw);
+      const newStart = Math.max(0, Math.min(origStart + origLen - 1, origStart + stepDelta));
+      cs.lengthSteps = origLen - (newStart - origStart);
+      cs.startStep = newStart;
+      syncClipToPattern(ti, tr);
+      block.style.left = (cs.startStep * sw) + 'px';
+      block.style.width = (cs.lengthSteps * sw) + 'px';
+    };
+    const onUp = ()=>{ document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+
+  // ── Drag RIGHT HANDLE to resize end ──
+  const rightHandle = block.querySelector('.clip-handle-right');
+  rightHandle.addEventListener('mousedown', e=>{
+    e.preventDefault(); e.stopPropagation();
+    const startX = e.clientX;
+    const origLen = cs.lengthSteps;
+    const onMove = mv=>{
+      const dx = mv.clientX - startX;
+      const stepDelta = Math.round(dx / sw);
+      cs.lengthSteps = Math.max(1, Math.min(STEPS - cs.startStep, origLen + stepDelta));
+      syncClipToPattern(ti, tr);
+      block.style.width = (cs.lengthSteps * sw) + 'px';
+    };
+    const onUp = ()=>{ document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+
+  wrap.appendChild(block);
+}
+
+function syncClipToPattern(ti, tr){
+  if(!pattern[ti]) pattern[ti] = Array(STEPS).fill(0);
+  pattern[ti].fill(0);
+  const cs = clipState[tr.id];
+  // Trigger at startStep only — scheduler reads this
+  if(cs.startStep < STEPS) pattern[ti][cs.startStep] = 1;
+}
+
+// Also patch refreshGrid to skip clip rows (they manage themselves)
+const _origRefreshGrid = refreshGrid;
+function refreshGrid(){
+  document.querySelectorAll('.step-btn').forEach(btn=>{
+    const ti=+btn.dataset.track, s=+btn.dataset.step;
+    if(ti >= TRACKS.length) return;
+    const on=!!pattern[ti][s];
+    btn.classList.toggle('on',on);
+    btn.style.opacity=on?velocities[ti][s]/100*.5+.5:'';
+  });
+}
+
 
 </script>
 
