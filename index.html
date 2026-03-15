@@ -31,6 +31,45 @@
   --row-h:40px;
   --bottom-panel-h:240px;
 }
+
+/* ═══════════════ AI CHAT STYLES ═══════════════ */
+#ai-chat-panel{position:fixed;z-index:99999;width:380px;max-width:96vw;top:0;left:0;bottom:0;
+  background:#0a0010;border-right:1.5px solid rgba(159,0,255,.5);
+  box-shadow:6px 0 40px rgba(0,0,0,.9),0 0 40px rgba(159,0,255,.12);
+  display:none;flex-direction:column;overflow:hidden;
+  transform:translateX(-100%);transition:transform .3s cubic-bezier(.22,1,.36,1);}
+#ai-chat-panel.open{display:flex;transform:translateX(0);}
+.ai-msg{display:flex;gap:8px;align-items:flex-start;animation:aiMsgIn .25s ease;}
+.ai-msg-bot{flex-direction:row;}
+.ai-msg-user{flex-direction:row-reverse;}
+.ai-msg-avatar{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.85rem;background:rgba(159,0,255,.2);border:1px solid rgba(159,0,255,.35);}
+.ai-msg-user .ai-msg-avatar{background:rgba(0,200,255,.15);border-color:rgba(0,200,255,.3);}
+.ai-msg-bubble{max-width:86%;padding:9px 13px;border-radius:12px;font-size:.76rem;line-height:1.55;color:var(--text-primary);word-break:break-word;}
+.ai-msg-bot .ai-msg-bubble{background:rgba(159,0,255,.12);border:1px solid rgba(159,0,255,.22);border-radius:4px 12px 12px 12px;}
+.ai-msg-user .ai-msg-bubble{background:rgba(0,180,255,.12);border:1px solid rgba(0,180,255,.25);border-radius:12px 4px 12px 12px;text-align:right;}
+.ai-msg-bubble strong{color:var(--purple-bright);}
+.ai-msg-bubble code{background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px;font-family:monospace;font-size:.72em;}
+.ai-msg-bubble pre{background:rgba(0,0,0,.35);border:1px solid rgba(159,0,255,.2);border-radius:8px;padding:8px 10px;overflow-x:auto;margin:6px 0;font-size:.68rem;}
+.ai-msg-bubble ul,.ai-msg-bubble ol{margin-left:16px;margin-top:4px;}
+.ai-msg-bubble li{margin-bottom:3px;}
+.ai-quick-btn{background:rgba(159,0,255,.1);border:1px solid rgba(159,0,255,.25);color:var(--text-secondary);border-radius:14px;padding:3px 9px;font-size:.62rem;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.ai-quick-btn:hover{background:rgba(159,0,255,.25);border-color:var(--purple-bright);color:#fff;}
+#ai-input:focus{border-color:var(--purple-bright);box-shadow:0 0 0 2px rgba(159,0,255,.15);}
+#ai-send-btn:hover{transform:scale(1.1);box-shadow:0 0 18px rgba(159,0,255,.6);}
+#btn-export:hover{
+  background:linear-gradient(135deg,rgba(0,220,255,.28),rgba(0,130,255,.2))!important;
+  border-color:rgba(0,220,255,.8)!important;
+  box-shadow:0 0 18px rgba(0,200,255,.45),0 0 6px rgba(0,200,255,.3)!important;
+  transform:translateY(-1px);
+  color:#fff!important;
+}
+#btn-export:active{transform:translateY(0) scale(.97);}
+#ai-messages::-webkit-scrollbar{width:4px;}
+#ai-messages::-webkit-scrollbar-thumb{background:rgba(159,0,255,.3);border-radius:2px;}
+.ai-error-bubble{background:rgba(255,60,60,.1)!important;border-color:rgba(255,60,60,.3)!important;color:#ff8888!important;}
+#ai-panel-overlay{display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.45);}
+@keyframes aiDot{0%,100%{opacity:.3;transform:scale(.8);}50%{opacity:1;transform:scale(1.1);}}
+@keyframes aiMsgIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
 body{background:var(--bg-void);color:var(--text-primary);font-family:var(--font-body);display:flex;flex-direction:column;position:relative}
@@ -413,8 +452,7 @@ input[type='range']::-moz-range-thumb{width:12px;height:12px;border-radius:50%;b
   display:flex;flex-shrink:0;position:sticky;top:0;z-index:15;
   background:rgba(5,0,12,.98);border-bottom:1px solid rgba(159,0,255,.22);
   min-width:max-content;
-  height:27px; /* must match .left-corner height exactly to keep columns in sync */
-  align-items:center;
+  height:27px;align-items:center;
 }
 .step-ruler-cell{
   width:var(--step-w);min-width:var(--step-w);flex-shrink:0;
@@ -1672,10 +1710,26 @@ onAuthStateChanged(fbAuth, async (firebaseUser) => {
   <div class="header-left" style="position:relative;z-index:2">
     <!-- Settings button -->
     <button id="btn-settings" title="Settings">⚙️</button>
-    <div class="kicks-wrap">
-      <button class="kicks-toggle-btn" id="kicks-toggle">🥁 KICKS ▾</button>
-      <div class="kicks-panel hidden" id="kicks-panel">
-        <div style="font-family:var(--font-display);font-size:.52rem;color:var(--text-muted);letter-spacing:.12em;padding-bottom:3px;border-bottom:1px solid var(--border);margin-bottom:2px">SELECT KICK</div>
+    <div class="kicks-wrap" id="ai-btn-wrap">
+      <button class="kicks-toggle-btn" id="ai-chat-btn" title="GIGO PAMBA AI (Ctrl+/)" style="background:linear-gradient(135deg,rgba(159,0,255,.35),rgba(100,0,200,.25));border-color:var(--purple-bright);display:flex;align-items:center;gap:6px;padding:5px 10px">
+        <svg width="22" height="18" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 0 4px #9F00FF)">
+          <g style="transform-origin:50px 44px;animation:wingFlapL 0.55s ease-in-out infinite alternate"><path d="M50 42C42 38,28 28,8 22C12 30,16 32,18 42C16 40,22 52,24 56C30 50,36 46,50 48Z" fill="url(#pWg)" opacity=".95"/></g>
+          <g style="transform-origin:50px 44px;animation:wingFlapR 0.55s ease-in-out infinite alternate"><path d="M50 42C58 38,72 28,92 22C88 30,84 32,82 42C84 40,78 52,76 56C70 50,64 46,50 48Z" fill="url(#pWg)" opacity=".95"/></g>
+          <ellipse cx="50" cy="44" rx="9" ry="10" fill="url(#pBg)"/>
+          <circle cx="50" cy="33" r="7.5" fill="url(#pBg)"/>
+          <polygon points="44,28 41,18 47,25" fill="#BF40FF"/><polygon points="56,28 59,18 53,25" fill="#BF40FF"/>
+          <circle cx="47" cy="32" r="2.2" fill="#FF00FF"/><circle cx="53" cy="32" r="2.2" fill="#FF00FF"/>
+          <circle cx="47" cy="32" r=".9" fill="#fff"/><circle cx="53" cy="32" r=".9" fill="#fff"/>
+          <defs>
+            <radialGradient id="pBg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#BF40FF"/><stop offset="60%" stop-color="#8800DD"/><stop offset="100%" stop-color="#5500AA"/></radialGradient>
+            <linearGradient id="pWg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#CC44FF"/><stop offset="100%" stop-color="#6600AA"/></linearGradient>
+          </defs>
+        </svg>
+        <span style="font-family:var(--font-display);font-size:.6rem;font-weight:700;letter-spacing:.06em">GIGO PAMBA</span>
+        <span style="font-size:.5rem;opacity:.6">▾</span>
+      </button>
+      <!-- Hidden kicks panel kept for updateKicksVis compatibility -->
+      <div id="kicks-panel" style="display:none">
         <button class="kick-pick-btn selected" data-ki="0">🥁 Standard</button>
         <button class="kick-pick-btn" data-ki="1">💣 Kick Hard</button>
         <button class="kick-pick-btn" data-ki="2">📼 Kick Tape</button>
@@ -1716,14 +1770,135 @@ onAuthStateChanged(fbAuth, async (firebaseUser) => {
 
   <div class="header-actions" style="position:relative;z-index:2">
     <!-- hidden legacy buttons kept for JS refs -->
-    <button id="btn-export" style="display:none"></button>
     <button id="btn-piano"  style="display:none"></button>
     <button id="btn-drums"  style="display:none"></button>
+    <!-- Visible Export button with jet logo -->
+    <button id="btn-export"
+      title="Export beats (paid users only)"
+      style="display:flex;align-items:center;gap:6px;
+        background:linear-gradient(135deg,rgba(0,200,255,.18),rgba(0,100,200,.12));
+        border:1.5px solid rgba(0,200,255,.45);
+        color:#00cfff;border-radius:var(--radius);
+        padding:6px 13px;cursor:pointer;
+        font-family:var(--font-display);font-size:.6rem;font-weight:700;
+        letter-spacing:.08em;transition:all .22s;
+        box-shadow:0 0 8px rgba(0,200,255,.18);
+        white-space:nowrap">
+      <svg width="18" height="18" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Jet / rocket body -->
+        <path d="M32 4 C32 4 44 16 44 34 L32 60 L20 34 C20 16 32 4 32 4Z"
+              fill="url(#jetBody)" opacity=".95"/>
+        <!-- Nose cone highlight -->
+        <path d="M32 4 C36 10 40 20 40 30 L32 30 Z"
+              fill="rgba(255,255,255,.22)"/>
+        <!-- Wings -->
+        <path d="M20 34 L6 46 L20 42 Z"  fill="#00aaee" opacity=".8"/>
+        <path d="M44 34 L58 46 L44 42 Z" fill="#00aaee" opacity=".8"/>
+        <!-- Exhaust flame -->
+        <ellipse cx="32" cy="60" rx="6" ry="4" fill="url(#flame)" opacity=".9"/>
+        <ellipse cx="32" cy="63" rx="3" ry="2" fill="#fff" opacity=".6"/>
+        <!-- Window -->
+        <circle cx="32" cy="28" r="4" fill="rgba(0,220,255,.7)" stroke="rgba(255,255,255,.5)" stroke-width="1"/>
+        <defs>
+          <linearGradient id="jetBody" x1="20" y1="4" x2="44" y2="60" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#00cfff"/>
+            <stop offset="100%" stop-color="#0055cc"/>
+          </linearGradient>
+          <linearGradient id="flame" x1="26" y1="58" x2="38" y2="64" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#FF8800"/>
+            <stop offset="100%" stop-color="#FF2200"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      EXPORT
+    </button>
     <button class="btn-icon" id="btn-about">👨‍💻 About</button>
     <button class="btn-icon" id="btn-help">❓ Help</button>
     <button class="btn-icon btn-account" id="btn-account" title="Account">👤</button>
   </div>
 </header>
+
+<!-- ═══════════════ AI BEAT ASSISTANT PANEL ═══════════════ -->
+<div id="ai-chat-panel">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px;border-bottom:1px solid rgba(159,0,255,.25);flex-shrink:0;background:rgba(0,0,0,.4)">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#5500AA,#9F00FF);display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px rgba(159,0,255,.6)">
+        <svg width="28" height="24" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 0 5px #FF00FF)">
+          <g style="transform-origin:50px 44px;animation:wingFlapL 0.55s ease-in-out infinite alternate"><path d="M50 42C42 38,28 28,8 22C12 30,16 32,18 42C16 40,22 52,24 56C30 50,36 46,50 48Z" fill="url(#pWg2)" opacity=".95"/></g>
+          <g style="transform-origin:50px 44px;animation:wingFlapR 0.55s ease-in-out infinite alternate"><path d="M50 42C58 38,72 28,92 22C88 30,84 32,82 42C84 40,78 52,76 56C70 50,64 46,50 48Z" fill="url(#pWg2)" opacity=".95"/></g>
+          <ellipse cx="50" cy="44" rx="9" ry="10" fill="url(#pBg2)"/>
+          <circle cx="50" cy="33" r="7.5" fill="url(#pBg2)"/>
+          <polygon points="44,28 41,18 47,25" fill="#BF40FF"/><polygon points="56,28 59,18 53,25" fill="#BF40FF"/>
+          <circle cx="47" cy="32" r="2.2" fill="#FF00FF"/><circle cx="53" cy="32" r="2.2" fill="#FF00FF"/>
+          <defs>
+            <radialGradient id="pBg2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#BF40FF"/><stop offset="60%" stop-color="#8800DD"/><stop offset="100%" stop-color="#5500AA"/></radialGradient>
+            <linearGradient id="pWg2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#CC44FF"/><stop offset="100%" stop-color="#6600AA"/></linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div>
+        <div style="font-family:var(--font-display);font-size:.75rem;font-weight:700;color:#fff;letter-spacing:.08em">GIGO PAMBA</div>
+        <div style="font-size:.58rem;color:rgba(159,0,255,.8);letter-spacing:.06em" id="ai-status-lbl">Ready to help</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button id="ai-key-btn" title="Set OpenAI API Key" style="background:rgba(255,140,0,.12);border:1px solid rgba(255,140,0,.3);color:rgba(255,140,0,.8);border-radius:6px;padding:3px 8px;font-size:.6rem;cursor:pointer;font-family:var(--font-display);letter-spacing:.06em;transition:all .2s">🔑 KEY</button>
+      <button id="ai-clear-btn" title="Clear chat" style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--text-muted);border-radius:6px;padding:3px 8px;font-size:.6rem;cursor:pointer;transition:all .2s">🗑 CLEAR</button>
+      <button id="ai-close-btn" style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer;padding:2px 6px;transition:color .15s" title="Close (Ctrl+/)">✕</button>
+    </div>
+  </div>
+  <div id="ai-key-bar" style="padding:10px 14px;background:rgba(255,140,0,.06);border-bottom:1px solid rgba(255,140,0,.2);flex-shrink:0">
+    <div style="font-size:.65rem;color:rgba(255,140,0,.9);margin-bottom:6px;font-family:var(--font-display);letter-spacing:.05em">🔑 GROQ API KEY — pre-configured, change only if needed</div>
+    <div style="display:flex;gap:6px">
+      <input id="ai-key-input" type="password" placeholder="gsk_... paste your Groq key here" style="flex:1;background:rgba(0,0,0,.4);border:1px solid rgba(255,140,0,.3);border-radius:6px;padding:5px 10px;color:#fff;font-size:.72rem;outline:none"/>
+      <button id="ai-key-save-btn" style="background:rgba(255,140,0,.2);border:1px solid rgba(255,140,0,.5);color:#fff;border-radius:6px;padding:5px 12px;font-size:.68rem;cursor:pointer;font-family:var(--font-display);letter-spacing:.06em;white-space:nowrap">SAVE</button>
+    </div>
+    <div style="font-size:.58rem;color:rgba(255,255,255,.3);margin-top:5px">Stored in your browser only. Never sent to our servers.</div>
+  </div>
+  <div style="padding:8px 12px;display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0;border-bottom:1px solid rgba(159,0,255,.12)">
+    <button class="ai-quick-btn" data-q="Suggest a drum pattern for trap music">🥁 Trap pattern</button>
+    <button class="ai-quick-btn" data-q="How do I make my 808s hit harder?">〰️ 808 tips</button>
+    <button class="ai-quick-btn" data-q="What BPM should I use for Afrobeats?">🌍 Afro BPM</button>
+    <button class="ai-quick-btn" data-q="Explain what swing does to a beat and how to use it">🎵 Swing</button>
+    <button class="ai-quick-btn" data-q="How do I layer kicks and snares properly?">💥 Layering</button>
+    <button class="ai-quick-btn" data-q="Give me an R&B neo-soul chord progression with note names">💜 R&B chords</button>
+    <button class="ai-quick-btn" data-q="What makes a great hi-hat pattern? Give me examples">🎩 Hi-hat tips</button>
+    <button class="ai-quick-btn" data-q="How do I write a catchy melody hook?">🎹 Melody hook</button>
+    <button class="ai-quick-btn" data-q="Analyse my current beat and give me suggestions">🎚️ Analyse beat</button>
+  </div>
+  <div id="ai-messages" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth">
+    <div class="ai-msg ai-msg-bot">
+      <div class="ai-msg-avatar" style="background:linear-gradient(135deg,#5500AA,#9F00FF);border-color:rgba(159,0,255,.5)">
+        <svg width="18" height="15" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
+          <g style="transform-origin:50px 44px;animation:wingFlapL 0.55s ease-in-out infinite alternate"><path d="M50 42C42 38,28 28,8 22C12 30,16 32,18 42C16 40,22 52,24 56C30 50,36 46,50 48Z" fill="#CC44FF" opacity=".95"/></g>
+          <g style="transform-origin:50px 44px;animation:wingFlapR 0.55s ease-in-out infinite alternate"><path d="M50 42C58 38,72 28,92 22C88 30,84 32,82 42C84 40,78 52,76 56C70 50,64 46,50 48Z" fill="#CC44FF" opacity=".95"/></g>
+          <ellipse cx="50" cy="44" rx="9" ry="10" fill="#8800DD"/>
+          <circle cx="50" cy="33" r="7.5" fill="#8800DD"/>
+          <circle cx="47" cy="32" r="2" fill="#FF00FF"/><circle cx="53" cy="32" r="2" fill="#FF00FF"/>
+        </svg>
+      </div>
+      <div class="ai-msg-bubble">
+        Hey! I'm <strong>GIGO PAMBA</strong> — your personal music production AI, powered by Groq.<br><br>
+        I know drums, bass, melody, mixing, sound design, and every genre from trap and drill to Afrobeats, Amapiano and R&amp;B.<br><br>
+        Ask me anything — pattern ideas, BPM, chords, 808 tips — or hit <strong>Analyse beat</strong> and I'll read what's in your sequencer right now.<br><br>
+        <span style="color:rgba(159,0,255,.7);font-size:.7em">Tip: No API key needed — I work right out of the box. Add your OpenAI key (🔑 KEY) for GPT-4o power.</span>
+      </div>
+    </div>
+  </div>
+  <div id="ai-typing" style="display:none;padding:6px 16px;flex-shrink:0">
+    <div style="display:inline-flex;gap:4px;align-items:center">
+      <div style="width:6px;height:6px;border-radius:50%;background:var(--purple-bright);animation:aiDot .8s ease-in-out infinite"></div>
+      <div style="width:6px;height:6px;border-radius:50%;background:var(--purple-bright);animation:aiDot .8s ease-in-out .2s infinite"></div>
+      <div style="width:6px;height:6px;border-radius:50%;background:var(--purple-bright);animation:aiDot .8s ease-in-out .4s infinite"></div>
+      <span style="font-size:.62rem;color:var(--text-muted);margin-left:6px">GIGO PAMBA is thinking…</span>
+    </div>
+  </div>
+  <div style="padding:10px 12px;border-top:1px solid rgba(159,0,255,.2);background:rgba(0,0,0,.3);flex-shrink:0;display:flex;gap:8px;align-items:flex-end">
+    <textarea id="ai-input" placeholder="Ask anything about beats, sounds, mixing…" rows="2" style="flex:1;background:rgba(159,0,255,.08);border:1.5px solid rgba(159,0,255,.25);border-radius:10px;padding:8px 12px;color:#fff;font-family:var(--font-body);font-size:.78rem;resize:none;outline:none;caret-color:var(--purple-bright);line-height:1.4;max-height:120px;overflow-y:auto;transition:border-color .2s"></textarea>
+    <button id="ai-send-btn" title="Send (Enter)" style="width:40px;height:40px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--accent),#FF00CC);border:none;color:#fff;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(159,0,255,.4);transition:all .2s">➤</button>
+  </div>
+</div>
+<div id="ai-panel-overlay"></div>
 
 <!-- TRANSPORT -->
 <div class="transport-bar">
@@ -1804,6 +1979,15 @@ onAuthStateChanged(fbAuth, async (firebaseUser) => {
   <button class="pbtn" data-p="Boom Bap OG">🎧 Boom Bap</button>
   <button class="pbtn" data-p="Lofi Study">🌙 Lo-Fi</button>
   <button class="pbtn" data-p="Afrobeats">🌍 Afro</button>
+  <button class="pbtn" data-p="Modern HipHop">🔥 Mod HH</button>
+  <button class="pbtn" data-p="Drill Modern">⚔️ Drill</button>
+  <button class="pbtn" data-p="Trap Melodic">🎹 Trap Mel</button>
+  <button class="pbtn" data-p="Afro Pop">🌺 Afro Pop</button>
+  <button class="pbtn" data-p="Afro Fusion">🥁 Afro Fusion</button>
+  <button class="pbtn" data-p="Amapiano">🎹 Amapiano</button>
+  <button class="pbtn" data-p="R&amp;B Smooth">💜 R&amp;B</button>
+  <button class="pbtn" data-p="Neo Soul">✨ Neo Soul</button>
+  <button class="pbtn" data-p="Trap R&amp;B">🔮 Trap R&amp;B</button>
   <div class="pat-group">
     <span>PAT</span>
     <button class="patbtn active" data-pat="A">A</button>
@@ -2542,12 +2726,12 @@ onAuthStateChanged(fbAuth, async (firebaseUser) => {
               ✅ Full access to all instruments<br>
               ✅ Beat sequencer (unlimited)<br>
               ✅ Export beats &amp; recordings<br>
-              ⏳ Trial ends after 1 week
+              ⏳ Trial ends after 1 day
             </div>
           </div>
           <button onclick="acctSwitchTab('pay')"
             style="width:100%;padding:12px;background:linear-gradient(135deg,var(--accent),var(--accent-mid));border:none;border-radius:10px;color:#000;font-weight:800;cursor:pointer;font-size:.82rem;font-family:var(--font-display);letter-spacing:.08em">
-            UPGRADE → $3 / WEEK
+            UPGRADE → $5 / WEEK
           </button>
         </div>
 
@@ -2595,32 +2779,47 @@ onAuthStateChanged(fbAuth, async (firebaseUser) => {
 
       <!-- PAYMENT tab -->
       <div id="acct-tab-pay" class="acct-tab-pane" style="display:none">
-        <div style="text-align:center;margin-bottom:16px">
-          <div style="font-family:var(--font-display);font-size:2rem;font-weight:900;color:var(--accent)">$3</div>
-          <div style="font-size:.78rem;color:var(--text-muted)">per week &nbsp;·&nbsp; <span style="color:#00ff88">First week FREE</span></div>
+        <div style="text-align:center;margin-bottom:14px">
+          <div style="font-family:var(--font-display);font-size:2.2rem;font-weight:900;color:var(--accent)">$5</div>
+          <div style="font-size:.75rem;color:var(--text-muted)">per week &nbsp;·&nbsp; <span style="color:#00ff88">First 24 hours FREE</span></div>
         </div>
-        <div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:.75rem;color:var(--text-secondary);line-height:1.8">
+        <div style="background:var(--bg-raised);border:1px solid var(--border);border-radius:8px;padding:10px 13px;margin-bottom:14px;font-size:.73rem;color:var(--text-secondary);line-height:1.8">
           ✅ Export all beats as audio files<br>
           ✅ Guitar, piano &amp; vocal recordings<br>
           ✅ Hand pan &amp; drum pad recordings<br>
           ☁️ Cloud saves — coming soon
         </div>
-        <button id="acct-paypal-btn"
-          style="width:100%;padding:14px;background:linear-gradient(135deg,#FFC439 0%,#F0A500 100%);border:none;border-radius:10px;cursor:pointer;font-weight:800;font-size:.95rem;color:#003087;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 18px rgba(255,196,57,.35);transition:all .2s;font-family:var(--font-display);letter-spacing:.04em"
-          onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 28px rgba(255,196,57,.55)'"
-          onmouseout="this.style.transform='';this.style.boxShadow='0 4px 18px rgba(255,196,57,.35)'">
-          <svg width="18" height="18" viewBox="0 0 24 24"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c1.379 4.275-1.376 6.53-6.088 6.53H12.32c-.524 0-.968.382-1.05.9l-1.45 9.21c-.08.51.28.98.794.98h3.593c.458 0 .849-.333.92-.785l.038-.196.733-4.647.047-.256a.932.932 0 0 1 .92-.785h.579c3.754 0 6.693-1.525 7.552-5.935.36-1.845.173-3.386-.774-4.476z" fill="#003087"/></svg>
-          PAY $3 / WEEK WITH PAYPAL
+
+        <!-- M-Pesa button -->
+        <button id="acct-mpesa-btn"
+          style="width:100%;padding:13px;background:linear-gradient(135deg,#00a651 0%,#007a3d 100%);border:none;border-radius:10px;cursor:pointer;font-weight:800;font-size:.9rem;color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 16px rgba(0,166,81,.4);transition:all .2s;font-family:var(--font-display);letter-spacing:.04em;margin-bottom:10px"
+          onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(0,166,81,.6)'"
+          onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(0,166,81,.4)'">
+          <svg width="20" height="20" viewBox="0 0 40 40" fill="none">
+            <circle cx="20" cy="20" r="20" fill="#fff" opacity=".15"/>
+            <text x="20" y="26" text-anchor="middle" font-size="13" font-weight="900" fill="#fff" font-family="Arial">M</text>
+          </svg>
+          PAY $5 / WEEK VIA M-PESA
         </button>
+
+        <!-- PayPal button -->
+        <button id="acct-paypal-btn"
+          style="width:100%;padding:13px;background:linear-gradient(135deg,#FFC439 0%,#F0A500 100%);border:none;border-radius:10px;cursor:pointer;font-weight:800;font-size:.9rem;color:#003087;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 16px rgba(255,196,57,.35);transition:all .2s;font-family:var(--font-display);letter-spacing:.04em"
+          onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(255,196,57,.55)'"
+          onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(255,196,57,.35)'">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c1.379 4.275-1.376 6.53-6.088 6.53H12.32c-.524 0-.968.382-1.05.9l-1.45 9.21c-.08.51.28.98.794.98h3.593c.458 0 .849-.333.92-.785l.038-.196.733-4.647.047-.256a.932.932 0 0 1 .92-.785h.579c3.754 0 6.693-1.525 7.552-5.935.36-1.845.173-3.386-.774-4.476z" fill="#003087"/></svg>
+          PAY $5 / WEEK — PAYPAL
+        </button>
+
         <div id="acct-pay-confirm" style="display:none;margin-top:12px;text-align:center">
-          <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:10px">Did you complete the payment?</div>
+          <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:8px">Did you complete the payment?</div>
           <button id="acct-confirm-paid-btn"
-            style="padding:10px 24px;background:rgba(0,255,100,.2);border:1px solid rgba(0,255,100,.5);color:#00ff88;border-radius:8px;cursor:pointer;font-weight:700;font-size:.82rem;font-family:var(--font-display)">
+            style="padding:9px 22px;background:rgba(0,255,100,.2);border:1px solid rgba(0,255,100,.5);color:#00ff88;border-radius:8px;cursor:pointer;font-weight:700;font-size:.8rem;font-family:var(--font-display)">
             ✅ YES, I PAID
           </button>
         </div>
-        <p style="text-align:center;font-size:.65rem;color:var(--text-muted);margin:12px 0 0;line-height:1.5">
-          Secure payment via PayPal · 7 days access · Cancel anytime
+        <p style="text-align:center;font-size:.63rem;color:var(--text-muted);margin:10px 0 0;line-height:1.6">
+          Secure payment &nbsp;·&nbsp; 7 days access after payment
         </p>
       </div>
 
@@ -2629,57 +2828,74 @@ onAuthStateChanged(fbAuth, async (firebaseUser) => {
 </div>
 
 <div class="modal-overlay" id="paywall-modal">
-  <div class="modal-box" style="max-width:400px;padding:28px 24px">
+  <div class="modal-box" style="max-width:420px;padding:26px 22px">
 
-    <!-- Glow header -->
-    <div style="text-align:center;margin-bottom:20px">
-      <div style="font-size:2.8rem;filter:drop-shadow(0 0 14px #9F00FF)">🔒</div>
-      <h2 style="margin:8px 0 4px;font-family:var(--font-display);font-size:1.25rem;letter-spacing:.06em;color:#fff">UNLOCK EXPORT</h2>
-      <p style="color:var(--text-muted);font-size:.78rem;margin:0;line-height:1.5">Your first <strong style="color:#00ff88">24 hours are FREE</strong>.<br>After that, just <strong style="color:var(--accent)">$3 / week</strong> to keep exporting.</p>
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:2.6rem;filter:drop-shadow(0 0 14px #9F00FF)">🔒</div>
+      <h2 style="margin:8px 0 4px;font-family:var(--font-display);font-size:1.2rem;letter-spacing:.06em;color:#fff">UNLOCK GIGO</h2>
+      <p style="color:var(--text-muted);font-size:.76rem;margin:0;line-height:1.55">Your first <strong style="color:#00ff88">24 hours are FREE</strong>.<br>After that, just <strong style="color:var(--accent)">$5 / week</strong> for full access.</p>
     </div>
 
-    <!-- Feature list -->
-    <div style="background:rgba(159,0,255,.08);border:1px solid rgba(159,0,255,.22);border-radius:10px;padding:12px 14px;margin-bottom:18px;display:flex;flex-direction:column;gap:8px">
+    <!-- Features -->
+    <div style="background:rgba(159,0,255,.08);border:1px solid rgba(159,0,255,.22);border-radius:10px;padding:10px 13px;margin-bottom:14px;display:flex;flex-direction:column;gap:7px">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:.78rem;color:var(--text-secondary)">🎵 Export beats &amp; recordings</span>
-        <span style="font-size:.65rem;background:rgba(0,255,100,.12);color:#00ff88;padding:2px 9px;border-radius:10px;border:1px solid rgba(0,255,100,.25);font-weight:700">✓ YES</span>
+        <span style="font-size:.76rem;color:var(--text-secondary)">🎵 Export beats &amp; recordings</span>
+        <span style="font-size:.63rem;background:rgba(0,255,100,.12);color:#00ff88;padding:2px 8px;border-radius:10px;border:1px solid rgba(0,255,100,.25);font-weight:700">✓</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:.78rem;color:var(--text-secondary)">🎸 Guitar &amp; voice takes</span>
-        <span style="font-size:.65rem;background:rgba(0,255,100,.12);color:#00ff88;padding:2px 9px;border-radius:10px;border:1px solid rgba(0,255,100,.25);font-weight:700">✓ YES</span>
+        <span style="font-size:.76rem;color:var(--text-secondary)">🎸 Guitar, piano &amp; voice takes</span>
+        <span style="font-size:.63rem;background:rgba(0,255,100,.12);color:#00ff88;padding:2px 8px;border-radius:10px;border:1px solid rgba(0,255,100,.25);font-weight:700">✓</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:.78rem;color:var(--text-secondary)">☁️ Cloud save &amp; sharing</span>
-        <span style="font-size:.65rem;background:rgba(255,170,0,.12);color:#FFAA00;padding:2px 9px;border-radius:10px;border:1px solid rgba(255,170,0,.25);font-weight:700">SOON</span>
+        <span style="font-size:.76rem;color:var(--text-secondary)">🤖 GIGO PAMBA AI</span>
+        <span style="font-size:.63rem;background:rgba(0,255,100,.12);color:#00ff88;padding:2px 8px;border-radius:10px;border:1px solid rgba(0,255,100,.25);font-weight:700">✓</span>
       </div>
     </div>
 
     <!-- Price -->
-    <div style="text-align:center;margin-bottom:18px;padding:12px;background:rgba(0,0,0,.25);border-radius:8px">
-      <span style="font-family:var(--font-display);font-size:2.4rem;font-weight:900;color:var(--purple-bright);text-shadow:0 0 24px rgba(159,0,255,.7)">$3</span>
-      <span style="font-size:.85rem;color:var(--text-muted)"> / week &nbsp;·&nbsp; </span>
-      <span style="font-size:.78rem;color:#00ff88">First 24h FREE</span>
+    <div style="text-align:center;margin-bottom:16px;padding:10px;background:rgba(0,0,0,.25);border-radius:8px">
+      <span style="font-family:var(--font-display);font-size:2.6rem;font-weight:900;color:var(--purple-bright);text-shadow:0 0 24px rgba(159,0,255,.7)">$5</span>
+      <span style="font-size:.82rem;color:var(--text-muted)"> / week &nbsp;·&nbsp; </span>
+      <span style="font-size:.76rem;color:#00ff88">First 24h FREE</span>
     </div>
 
-    <!-- PayPal button — prominent, branded -->
-    <button id="paypal-manual-btn"
-      style="width:100%;padding:14px;background:linear-gradient(135deg,#FFC439 0%,#F0A500 100%);
-      border:none;border-radius:10px;cursor:pointer;font-weight:800;font-size:1rem;color:#003087;
+    <!-- M-Pesa button -->
+    <button id="mpesa-manual-btn"
+      style="width:100%;padding:14px;background:linear-gradient(135deg,#00a651 0%,#007a3d 100%);
+      border:none;border-radius:10px;cursor:pointer;font-weight:800;font-size:.95rem;color:#fff;
       display:flex;align-items:center;justify-content:center;gap:10px;
-      box-shadow:0 4px 18px rgba(255,196,57,.35);transition:all .2s;letter-spacing:.02em"
-      onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(255,196,57,.5)'"
-      onmouseout="this.style.transform='';this.style.boxShadow='0 4px 18px rgba(255,196,57,.35)'">
-      <!-- PayPal "P" wordmark SVG -->
-      <svg width="20" height="20" viewBox="0 0 24 24"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c1.379 4.275-1.376 6.53-6.088 6.53H12.32c-.524 0-.968.382-1.05.9l-1.45 9.21c-.08.51.28.98.794.98h3.593c.458 0 .849-.333.92-.785l.038-.196.733-4.647.047-.256a.932.932 0 0 1 .92-.785h.579c3.754 0 6.693-1.525 7.552-5.935.36-1.845.173-3.386-.774-4.476z" fill="#003087"/></svg>
-      Pay $1 / week with PayPal
+      box-shadow:0 4px 18px rgba(0,166,81,.45);transition:all .2s;letter-spacing:.03em;margin-bottom:10px"
+      onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 26px rgba(0,166,81,.65)'"
+      onmouseout="this.style.transform='';this.style.boxShadow='0 4px 18px rgba(0,166,81,.45)'">
+      <svg width="22" height="22" viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="none" stroke="#fff" stroke-width="2" opacity=".5"/><text x="20" y="27" text-anchor="middle" font-size="16" font-weight="900" fill="#fff" font-family="Arial,sans-serif">M</text></svg>
+      PAY VIA M-PESA — $5/WEEK
     </button>
 
-    <p style="text-align:center;font-size:.68rem;color:var(--text-muted);margin:10px 0 0;line-height:1.6">
-      Secure · $3 unlocks full export for 7 days &nbsp;·&nbsp; Cancel anytime
-    </p>
+    <!-- Divider -->
+    <div style="display:flex;align-items:center;gap:8px;margin:8px 0">
+      <div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div>
+      <span style="font-size:.62rem;color:var(--text-muted)">or</span>
+      <div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div>
+    </div>
 
-    <div style="text-align:center;margin-top:10px">
-      <button id="paywall-close" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:.75rem;opacity:.7;text-decoration:underline">Maybe later</button>
+    <!-- PayPal button -->
+    <button id="paypal-manual-btn"
+      style="width:100%;padding:14px;background:linear-gradient(135deg,#FFC439 0%,#F0A500 100%);
+      border:none;border-radius:10px;cursor:pointer;font-weight:800;font-size:.95rem;color:#003087;
+      display:flex;align-items:center;justify-content:center;gap:10px;
+      box-shadow:0 4px 18px rgba(255,196,57,.35);transition:all .2s;letter-spacing:.02em"
+      onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(255,196,57,.55)'"
+      onmouseout="this.style.transform='';this.style.boxShadow='0 4px 18px rgba(255,196,57,.35)'">
+      <svg width="20" height="20" viewBox="0 0 24 24"><path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c1.379 4.275-1.376 6.53-6.088 6.53H12.32c-.524 0-.968.382-1.05.9l-1.45 9.21c-.08.51.28.98.794.98h3.593c.458 0 .849-.333.92-.785l.038-.196.733-4.647.047-.256a.932.932 0 0 1 .92-.785h.579c3.754 0 6.693-1.525 7.552-5.935.36-1.845.173-3.386-.774-4.476z" fill="#003087"/></svg>
+      PAY $5/WEEK — PAYPAL
+    </button>
+
+    <p style="text-align:center;font-size:.65rem;color:var(--text-muted);margin:10px 0 0;line-height:1.7">
+      Secure &nbsp;·&nbsp; 7 days full access &nbsp;·&nbsp; Cancel anytime
+    </p>
+    <div style="text-align:center;margin-top:8px">
+      <button id="paywall-close" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:.73rem;opacity:.6;text-decoration:underline">Maybe later</button>
     </div>
   </div>
 </div>
@@ -3059,8 +3275,6 @@ const S={
       const playDur = dur!==null ? Math.min(dur, buf.duration) : buf.duration;
       const safeT   = Math.max(AC.currentTime, t);
       g.gain.setValueAtTime(v||1, safeT);
-      // Only fade out when the clip is deliberately truncated shorter than its real length.
-      // Fading unconditionally was cutting into recordings mid-phrase at wrong times.
       const isTruncated = dur !== null && dur < buf.duration - 0.05;
       if(isTruncated && playDur > 0.08) g.gain.setTargetAtTime(0, safeT+playDur-0.06, 0.02);
       // Stereo pan
@@ -3690,6 +3904,51 @@ const S={
       g.gain.setValueAtTime(v*.18,t+d-.5);g.gain.exponentialRampToValueAtTime(.001,t+d);
       o.connect(lpf);lpf.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.1);});},
 
+  // ══ MODERN HIP-HOP SOUNDS ══
+  mhipKick(t,p={}){const{volume:v=1,pitch:hz=52,decay:d=0.42}=p;const o=AC.createOscillator();o.type='sine';o.frequency.setValueAtTime(hz*6,t);o.frequency.exponentialRampToValueAtTime(hz,t+.03);o.frequency.exponentialRampToValueAtTime(hz*.45,t+d);const dist=AC.createWaveShaper();dist.curve=mkDist(120);dist.oversample='4x';const lpf=AC.createBiquadFilter();lpf.type='lowpass';lpf.frequency.value=1800;const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(dist);dist.connect(lpf);lpf.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.05);},
+  mhipKickSnap(t,p={}){const{volume:v=1,pitch:hz=50,decay:d=0.3}=p;const o=AC.createOscillator();o.type='sine';o.frequency.setValueAtTime(hz*8,t);o.frequency.exponentialRampToValueAtTime(hz,t+.018);const n=AC.createBufferSource();n.buffer=noise();const nf=AC.createBiquadFilter();nf.type='highpass';nf.frequency.value=5000;const ng=AC.createGain();ng.gain.setValueAtTime(v*.5,t);ng.gain.exponentialRampToValueAtTime(.001,t+.04);const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(MG);n.connect(nf);nf.connect(ng);ng.connect(MG);o.start(t);o.stop(t+d+.05);n.start(t);n.stop(t+.06);},
+  mhipSnare(t,p={}){const{volume:v=1,decay:d=0.18}=p;const n=AC.createBufferSource();n.buffer=noise();const hpf=AC.createBiquadFilter();hpf.type='highpass';hpf.frequency.value=2200;const bpf=AC.createBiquadFilter();bpf.type='peaking';bpf.frequency.value=4500;bpf.gain.value=8;bpf.Q.value=1.2;const g=AC.createGain();g.gain.setValueAtTime(v*.9,t);g.gain.exponentialRampToValueAtTime(.001,t+d);const o=AC.createOscillator();o.type='triangle';o.frequency.setValueAtTime(220,t);o.frequency.exponentialRampToValueAtTime(100,t+d*.4);const og=AC.createGain();og.gain.setValueAtTime(v*.45,t);og.gain.exponentialRampToValueAtTime(.001,t+d*.6);n.connect(hpf);hpf.connect(bpf);bpf.connect(g);g.connect(MG);o.connect(og);og.connect(MG);n.start(t);n.stop(t+d+.05);o.start(t);o.stop(t+d);},
+  mhipClap(t,p={}){const{volume:v=1,decay:d=0.14}=p;[0,.008,.016].forEach(off=>{const n=AC.createBufferSource();n.buffer=noise();const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=2000+off*50000;f.Q.value=.6;const g=AC.createGain();g.gain.setValueAtTime(v*.85,t+off);g.gain.exponentialRampToValueAtTime(.001,t+off+d);n.connect(f);f.connect(g);g.connect(MG);n.start(t+off);n.stop(t+off+d+.05);});},
+  mhipHH(t,p={}){const{volume:v=0.72,decay:d=0.04}=p;const n=AC.createBufferSource();n.buffer=noise();const f=AC.createBiquadFilter();f.type='highpass';f.frequency.value=9000;const f2=AC.createBiquadFilter();f2.type='peaking';f2.frequency.value=12000;f2.gain.value=6;const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);n.connect(f);f.connect(f2);f2.connect(g);g.connect(MG);n.start(t);n.stop(t+d+.02);},
+  mhipHHOpen(t,p={}){const{volume:v=0.6,decay:d=0.28}=p;const n=AC.createBufferSource();n.buffer=noise();const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=9500;f.Q.value=.7;const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);n.connect(f);f.connect(g);g.connect(MG);n.start(t);n.stop(t+d+.05);},
+  mhipPerc(t,p={}){const{volume:v=0.78,pitch:hz=350,decay:d=0.1}=p;const o=AC.createOscillator();o.type='triangle';o.frequency.setValueAtTime(hz*1.5,t);o.frequency.exponentialRampToValueAtTime(hz,t+.012);const n=AC.createBufferSource();n.buffer=noise();const nf=AC.createBiquadFilter();nf.type='bandpass';nf.frequency.value=hz*2;nf.Q.value=3;const ng=AC.createGain();ng.gain.setValueAtTime(v*.3,t);ng.gain.exponentialRampToValueAtTime(.001,t+.04);const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(MG);n.connect(nf);nf.connect(ng);ng.connect(MG);o.start(t);o.stop(t+d+.02);n.start(t);n.stop(t+.06);},
+  mhip808(t,p={}){const{volume:v=0.97,pitch:hz=42,decay:d=1.6}=p;const o=AC.createOscillator();o.type='sine';o.frequency.setValueAtTime(hz*4,t);o.frequency.exponentialRampToValueAtTime(hz,t+.08);const dist=AC.createWaveShaper();dist.curve=mkDist(220);dist.oversample='4x';const lpf=AC.createBiquadFilter();lpf.type='lowpass';lpf.frequency.setValueAtTime(900,t);lpf.frequency.exponentialRampToValueAtTime(180,t+d*.6);const g=AC.createGain();g.gain.setValueAtTime(v,t+.004);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(dist);dist.connect(lpf);lpf.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.1);},
+  mhip808Punch(t,p={}){const{volume:v=0.93,pitch:hz=48,decay:d=0.9}=p;const o=AC.createOscillator();o.type='sine';o.frequency.setValueAtTime(hz*6,t);o.frequency.exponentialRampToValueAtTime(hz,t+.05);const dist=AC.createWaveShaper();dist.curve=mkDist(280);dist.oversample='4x';const lpf=AC.createBiquadFilter();lpf.type='lowpass';lpf.frequency.value=1100;const g=AC.createGain();g.gain.setValueAtTime(v,t+.003);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(dist);dist.connect(lpf);lpf.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.1);},
+  mhipMelody(t,p={}){const{volume:v=0.8,pitch:hz=523,decay:d=0.9}=p;[[1,0],[2,7],[1.5,-5]].forEach(([rat,det])=>{const o=AC.createOscillator();o.type='sawtooth';o.frequency.value=hz*rat;o.detune.value=det;const lpf=AC.createBiquadFilter();lpf.type='lowpass';lpf.frequency.setValueAtTime(3000,t);lpf.frequency.exponentialRampToValueAtTime(800,t+.3);const g=AC.createGain();g.gain.setValueAtTime(v*.35,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(lpf);lpf.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.05);});},
+  mhipBrass(t,p={}){const{volume:v=0.82,pitch:hz=311,decay:d=0.4}=p;const o=AC.createOscillator();o.type='sawtooth';o.frequency.value=hz;const o2=AC.createOscillator();o2.type='sawtooth';o2.frequency.value=hz*2;o2.detune.value=-10;const lpf=AC.createBiquadFilter();lpf.type='lowpass';lpf.frequency.setValueAtTime(4000,t);lpf.frequency.exponentialRampToValueAtTime(1200,t+d);const dist=AC.createWaveShaper();dist.curve=mkDist(30);const g=AC.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v*.6,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(dist);o2.connect(dist);dist.connect(lpf);lpf.connect(g);g.connect(MG);o.start(t);o2.start(t);o.stop(t+d+.05);o2.stop(t+d+.05);},
+  mhipFlute(t,p={}){const{volume:v=0.7,pitch:hz=659,decay:d=0.7}=p;const o=AC.createOscillator();o.type='sine';o.frequency.value=hz;const lfo=AC.createOscillator();lfo.type='sine';lfo.frequency.value=5.5;const lfoG=AC.createGain();lfoG.gain.setValueAtTime(0,t);lfoG.gain.linearRampToValueAtTime(4,t+.12);lfo.connect(lfoG);lfoG.connect(o.detune);const hpf=AC.createBiquadFilter();hpf.type='highpass';hpf.frequency.value=300;const g=AC.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v*.8,t+.04);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(hpf);hpf.connect(g);g.connect(MG);o.start(t);lfo.start(t);o.stop(t+d+.05);lfo.stop(t+d+.05);},
+  mhipPad(t,p={}){const{volume:v=0.72,pitch:hz=261,decay:d=2.8}=p;[[1,0],[1.5,5],[2,-7],[0.5,3]].forEach(([rat,det])=>{const o=AC.createOscillator();o.type='sawtooth';o.frequency.value=hz*rat;o.detune.value=det;const lpf=AC.createBiquadFilter();lpf.type='lowpass';lpf.frequency.setValueAtTime(300,t);lpf.frequency.linearRampToValueAtTime(2000,t+.5);lpf.Q.value=1.5;const g=AC.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v*.22,t+.3);g.gain.exponentialRampToValueAtTime(.001,t+d);const rev=mkRev(.4);o.connect(lpf);lpf.connect(g);g.connect(MG);g.connect(rev);o.start(t);o.stop(t+d+.1);});},
+  mhipAdlib(t,p={}){const{volume:v=0.72,pitch:hz=440,decay:d=0.22}=p;[[1,1],[2,.5],[3,.25]].forEach(([h,a])=>{const o=AC.createOscillator();o.type='sine';o.frequency.value=hz*h;const g=AC.createGain();g.gain.setValueAtTime(v*a*.8,t);g.gain.exponentialRampToValueAtTime(.001,t+d*(1-h*.04));o.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.05);});const n=AC.createBufferSource();n.buffer=noise();const nf=AC.createBiquadFilter();nf.type='bandpass';nf.frequency.value=2200;nf.Q.value=8;const ng=AC.createGain();ng.gain.setValueAtTime(v*.2,t);ng.gain.exponentialRampToValueAtTime(.001,t+.03);n.connect(nf);nf.connect(ng);ng.connect(MG);n.start(t);n.stop(t+.05);},
+  // ══ AFRO POP SOUNDS ══
+  afroKick(t,p={}){const{volume:v=1,pitch:hz=58,decay:d=0.38}=p;const o=AC.createOscillator();o.type='sine';o.frequency.setValueAtTime(hz*5,t);o.frequency.exponentialRampToValueAtTime(hz,t+.035);o.frequency.exponentialRampToValueAtTime(hz*.55,t+d*.7);const dist=AC.createWaveShaper();dist.curve=mkDist(60);const n=AC.createBufferSource();n.buffer=pink();const nf=AC.createBiquadFilter();nf.type='lowpass';nf.frequency.value=400;const ng=AC.createGain();ng.gain.setValueAtTime(v*.2,t);ng.gain.exponentialRampToValueAtTime(.001,t+.07);const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(dist);dist.connect(g);g.connect(MG);n.connect(nf);nf.connect(ng);ng.connect(MG);o.start(t);o.stop(t+d+.05);n.start(t);n.stop(t+.1);},
+  afroSnare(t,p={}){const{volume:v=1,decay:d=0.2}=p;const n=AC.createBufferSource();n.buffer=noise();const hpf=AC.createBiquadFilter();hpf.type='highpass';hpf.frequency.value=1800;const g=AC.createGain();g.gain.setValueAtTime(v*.85,t);g.gain.exponentialRampToValueAtTime(.001,t+d);const o=AC.createOscillator();o.type='triangle';o.frequency.setValueAtTime(260,t);o.frequency.exponentialRampToValueAtTime(120,t+d*.5);const og=AC.createGain();og.gain.setValueAtTime(v*.55,t);og.gain.exponentialRampToValueAtTime(.001,t+d*.7);const rev=mkRev(.12);n.connect(hpf);hpf.connect(g);g.connect(MG);g.connect(rev);o.connect(og);og.connect(MG);n.start(t);n.stop(t+d+.05);o.start(t);o.stop(t+d);},
+  afroHH(t,p={}){const{volume:v=0.68,decay:d=0.05}=p;const n=AC.createBufferSource();n.buffer=noise();const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=8000;f.Q.value=1.4;const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);n.connect(f);f.connect(g);g.connect(MG);n.start(t);n.stop(t+d+.02);},
+  afroHHOpen(t,p={}){const{volume:v=0.62,decay:d=0.35}=p;const n=AC.createBufferSource();n.buffer=noise();const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=8500;f.Q.value=.9;const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);n.connect(f);f.connect(g);g.connect(MG);n.start(t);n.stop(t+d+.05);},
+  afroPerc1(t,p={}){const{volume:v=0.78,pitch:hz=1200,decay:d=0.08}=p;const n=AC.createBufferSource();n.buffer=noise();const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=hz;f.Q.value=.5;const g=AC.createGain();g.gain.setValueAtTime(v*.7,t);g.gain.exponentialRampToValueAtTime(.001,t+d);n.connect(f);f.connect(g);g.connect(MG);n.start(t);n.stop(t+d+.02);},
+  afroPerc2(t,p={}){const{volume:v=0.82,pitch:hz=280,decay:d=0.18}=p;const o=AC.createOscillator();o.type='sine';o.frequency.setValueAtTime(hz*2,t);o.frequency.exponentialRampToValueAtTime(hz*.6,t+d*.5);const n=AC.createBufferSource();n.buffer=noise();const nf=AC.createBiquadFilter();nf.type='bandpass';nf.frequency.value=hz*1.5;nf.Q.value=4;const ng=AC.createGain();ng.gain.setValueAtTime(v*.25,t);ng.gain.exponentialRampToValueAtTime(.001,t+.06);const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(MG);n.connect(nf);nf.connect(ng);ng.connect(MG);o.start(t);o.stop(t+d+.02);n.start(t);n.stop(t+.08);},
+  afroPerc3(t,p={}){const{volume:v=0.72,pitch:hz=900,decay:d=0.12}=p;const o=AC.createOscillator();o.type='triangle';o.frequency.value=hz;const o2=AC.createOscillator();o2.type='triangle';o2.frequency.value=hz*2.76;const g=AC.createGain();g.gain.setValueAtTime(v*.6,t);g.gain.exponentialRampToValueAtTime(.001,t+d);const g2=AC.createGain();g2.gain.setValueAtTime(v*.35,t);g2.gain.exponentialRampToValueAtTime(.001,t+d*.7);o.connect(g);g.connect(MG);o2.connect(g2);g2.connect(MG);o.start(t);o2.start(t);o.stop(t+d+.02);o2.stop(t+d+.02);},
+  afroBass(t,p={}){const{volume:v=0.88,pitch:hz=70,decay:d=0.55}=p;const o=AC.createOscillator();o.type='sawtooth';o.frequency.value=hz;const env=AC.createGain();env.gain.setValueAtTime(0,t);env.gain.linearRampToValueAtTime(1,t+.006);env.gain.exponentialRampToValueAtTime(.001,t+d);const lpf=AC.createBiquadFilter();lpf.type='lowpass';lpf.frequency.setValueAtTime(4000,t);lpf.frequency.exponentialRampToValueAtTime(hz*5,t+.08);lpf.Q.value=4;const dist=AC.createWaveShaper();dist.curve=mkDist(25);const g=AC.createGain();g.gain.value=v*.7;o.connect(dist);dist.connect(lpf);lpf.connect(env);env.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.1);},
+  afroGuitar(t,p={}){const{volume:v=0.82,pitch:hz=330,decay:d=0.8}=p;const len=Math.ceil(AC.sampleRate/hz);const buf=AC.createBuffer(1,AC.sampleRate*(d+.2),AC.sampleRate);const data=buf.getChannelData(0);for(let i=0;i<len;i++)data[i]=(Math.random()*2-1);for(let i=len;i<data.length;i++)data[i]=0.995*(data[i-len]+data[i-len+1])*0.5;const src=AC.createBufferSource();src.buffer=buf;const hpf=AC.createBiquadFilter();hpf.type='highpass';hpf.frequency.value=200;const pres=AC.createBiquadFilter();pres.type='peaking';pres.frequency.value=3500;pres.gain.value=5;const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);src.connect(hpf);hpf.connect(pres);pres.connect(g);g.connect(MG);src.start(t);src.stop(t+d+.1);},
+  afroPiano(t,p={}){const{volume:v=0.82,pitch:hz=523,decay:d=0.7}=p;[[1,1],[2,.55],[3,.3],[4,.18],[6,.1]].forEach(([h,a])=>{const o=AC.createOscillator();o.type='sine';o.frequency.value=hz*h;const g=AC.createGain();g.gain.setValueAtTime(v*a,t);g.gain.exponentialRampToValueAtTime(.001,t+d*(1.05-h*.06));o.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.05);});const n=AC.createBufferSource();n.buffer=noise();const nf=AC.createBiquadFilter();nf.type='highpass';nf.frequency.value=4000;const ng=AC.createGain();ng.gain.setValueAtTime(v*.12,t);ng.gain.exponentialRampToValueAtTime(.001,t+.02);n.connect(nf);nf.connect(ng);ng.connect(MG);n.start(t);n.stop(t+.03);},
+  afroSynth(t,p={}){const{volume:v=0.78,pitch:hz=392,decay:d=0.6}=p;const o=AC.createOscillator();o.type='sawtooth';o.frequency.value=hz;const o2=AC.createOscillator();o2.type='square';o2.frequency.value=hz*1.5;o2.detune.value=5;const lpf=AC.createBiquadFilter();lpf.type='lowpass';lpf.frequency.setValueAtTime(5000,t);lpf.frequency.exponentialRampToValueAtTime(800,t+.2);lpf.Q.value=6;const g=AC.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v*.5,t+.01);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(lpf);o2.connect(lpf);lpf.connect(g);g.connect(MG);o.start(t);o2.start(t);o.stop(t+d+.05);o2.stop(t+d+.05);},
+  afroVox(t,p={}){const{volume:v=0.76,pitch:hz=349,decay:d=0.3}=p;[[1,1],[2,.4],[3,.2],[4,.1],[5.3,.08]].forEach(([h,a])=>{const o=AC.createOscillator();o.type='sine';o.frequency.value=hz*h;const g=AC.createGain();g.gain.setValueAtTime(v*a,t);g.gain.exponentialRampToValueAtTime(.001,t+d*(1-h*.04));o.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.05);});},
+  afroChime(t,p={}){const{volume:v=0.65,pitch:hz=1760,decay:d=1.2}=p;[[1,1],[2.76,.45],[5.4,.22]].forEach(([rat,a])=>{const o=AC.createOscillator();o.type='sine';o.frequency.value=hz*rat;const g=AC.createGain();g.gain.setValueAtTime(v*a,t);g.gain.exponentialRampToValueAtTime(.001,t+d*(1.2-rat*.04));const rev=mkRev(.25);o.connect(g);g.connect(MG);g.connect(rev);o.start(t);o.stop(t+d+.1);});},
+  // ══ R&B SOUNDS ══
+  rnbKick(t,p={}){const{volume:v=1,pitch:hz=55,decay:d=0.45}=p;const o=AC.createOscillator();o.type='sine';o.frequency.setValueAtTime(hz*4.5,t);o.frequency.exponentialRampToValueAtTime(hz,t+.04);o.frequency.exponentialRampToValueAtTime(hz*.5,t+d*.8);const dist=AC.createWaveShaper();dist.curve=mkDist(50);const lpf=AC.createBiquadFilter();lpf.type='lowpass';lpf.frequency.value=2200;const g=AC.createGain();g.gain.setValueAtTime(v,t+.002);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(dist);dist.connect(lpf);lpf.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.05);},
+  rnbSnare(t,p={}){const{volume:v=1,decay:d=0.25}=p;const n=AC.createBufferSource();n.buffer=noise();const hpf=AC.createBiquadFilter();hpf.type='highpass';hpf.frequency.value=1600;const peak=AC.createBiquadFilter();peak.type='peaking';peak.frequency.value=3200;peak.gain.value=6;peak.Q.value=1.5;const g=AC.createGain();g.gain.setValueAtTime(v*.8,t);g.gain.exponentialRampToValueAtTime(.001,t+d);const o=AC.createOscillator();o.type='triangle';o.frequency.setValueAtTime(190,t);o.frequency.exponentialRampToValueAtTime(80,t+d*.45);const og=AC.createGain();og.gain.setValueAtTime(v*.5,t);og.gain.exponentialRampToValueAtTime(.001,t+d*.6);const rev=mkRev(.22);n.connect(hpf);hpf.connect(peak);peak.connect(g);g.connect(MG);g.connect(rev);o.connect(og);og.connect(MG);n.start(t);n.stop(t+d+.05);o.start(t);o.stop(t+d);},
+  rnbHH(t,p={}){const{volume:v=0.6,decay:d=0.05}=p;const n=AC.createBufferSource();n.buffer=noise();const f=AC.createBiquadFilter();f.type='highpass';f.frequency.value=8500;const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);n.connect(f);f.connect(g);g.connect(MG);n.start(t);n.stop(t+d+.02);},
+  rnbClap(t,p={}){const{volume:v=0.88,decay:d=0.2}=p;[0,.009,.018].forEach(off=>{const n=AC.createBufferSource();n.buffer=noise();const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=1600+off*20000;f.Q.value=.9;const g=AC.createGain();g.gain.setValueAtTime(v*.75,t+off);g.gain.exponentialRampToValueAtTime(.001,t+off+d);n.connect(f);f.connect(g);g.connect(MG);n.start(t+off);n.stop(t+off+d+.05);});},
+  rnbSnap(t,p={}){const{volume:v=0.72,decay:d=0.06}=p;const n=AC.createBufferSource();n.buffer=noise();const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=2400;f.Q.value=3;const g=AC.createGain();g.gain.setValueAtTime(v*.65,t);g.gain.exponentialRampToValueAtTime(.001,t+d);n.connect(f);f.connect(g);g.connect(MG);n.start(t);n.stop(t+d+.01);const o=AC.createOscillator();o.type='triangle';o.frequency.value=3500;const og=AC.createGain();og.gain.setValueAtTime(v*.25,t);og.gain.exponentialRampToValueAtTime(.001,t+.025);o.connect(og);og.connect(MG);o.start(t);o.stop(t+.035);},
+  rnbRide(t,p={}){const{volume:v=0.55,decay:d=1.0}=p;const n=AC.createBufferSource();n.buffer=noise();const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=7500;f.Q.value=.6;const g=AC.createGain();g.gain.setValueAtTime(v*.6,t);g.gain.exponentialRampToValueAtTime(.001,t+d);const o=AC.createOscillator();o.type='triangle';o.frequency.value=620;const og=AC.createGain();og.gain.setValueAtTime(v*.3,t);og.gain.exponentialRampToValueAtTime(.001,t+d*.5);n.connect(f);f.connect(g);g.connect(MG);o.connect(og);og.connect(MG);n.start(t);n.stop(t+d+.1);o.start(t);o.stop(t+d*.5+.05);},
+  rnbBass(t,p={}){const{volume:v=0.92,pitch:hz=55,decay:d=1.2}=p;const o=AC.createOscillator();o.type='sine';o.frequency.setValueAtTime(hz*3,t);o.frequency.exponentialRampToValueAtTime(hz,t+.09);const dist=AC.createWaveShaper();dist.curve=mkDist(140);dist.oversample='4x';const lpf=AC.createBiquadFilter();lpf.type='lowpass';lpf.frequency.setValueAtTime(1200,t);lpf.frequency.exponentialRampToValueAtTime(250,t+d*.55);const g=AC.createGain();g.gain.setValueAtTime(v,t+.005);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(dist);dist.connect(lpf);lpf.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.1);},
+  rnbBassWarm(t,p={}){const{volume:v=0.88,pitch:hz=62,decay:d=0.9}=p;const len=Math.ceil(AC.sampleRate/hz);const buf=AC.createBuffer(1,AC.sampleRate*(d+.1),AC.sampleRate);const data=buf.getChannelData(0);for(let i=0;i<len;i++)data[i]=(Math.random()*2-1);for(let i=len;i<data.length;i++)data[i]=0.997*(data[i-len]+data[i-len+1])*0.5;const src=AC.createBufferSource();src.buffer=buf;const lpf=AC.createBiquadFilter();lpf.type='lowpass';lpf.frequency.value=800;const warm=AC.createBiquadFilter();warm.type='lowshelf';warm.frequency.value=250;warm.gain.value=4;const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);src.connect(lpf);lpf.connect(warm);warm.connect(g);g.connect(MG);src.start(t);src.stop(t+d+.1);},
+  rnbKeys(t,p={}){const{volume:v=0.82,pitch:hz=261.63,decay:d=2.0}=p;[[1,1],[2,.55],[3,.28],[4,.14],[6,.07]].forEach(([h,a])=>{const o=AC.createOscillator();o.type='sine';o.frequency.value=hz*h;const g=AC.createGain();g.gain.setValueAtTime(v*a,t);g.gain.setValueAtTime(v*a*.75,t+.008);g.gain.exponentialRampToValueAtTime(.001,t+d*(1-h*.05));o.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.05);});},
+  rnbChord(t,p={}){const{volume:v=0.72,pitch:hz=220,decay:d=2.5}=p;[hz,hz*1.25,hz*1.5,hz*1.875].forEach((f,i)=>{[[1,1],[2,.4],[3,.2]].forEach(([h,a])=>{const o=AC.createOscillator();o.type='sine';o.frequency.value=f*h;o.detune.value=i*2;const g=AC.createGain();g.gain.setValueAtTime(0,t+i*.012);g.gain.linearRampToValueAtTime(v*a*.3,t+i*.012+.02);g.gain.exponentialRampToValueAtTime(.001,t+d-i*.1);o.connect(g);g.connect(MG);o.start(t+i*.012);o.stop(t+d+.1);});});},
+  rnbGuitar(t,p={}){const{volume:v=0.78,pitch:hz=247,decay:d=1.4}=p;const len=Math.ceil(AC.sampleRate/hz);const buf=AC.createBuffer(1,AC.sampleRate*(d+.2),AC.sampleRate);const data=buf.getChannelData(0);for(let i=0;i<len;i++)data[i]=(Math.random()*2-1)*.7;for(let i=len;i<data.length;i++)data[i]=0.998*(data[i-len]+data[i-len+1])*0.5;const src=AC.createBufferSource();src.buffer=buf;const hpf=AC.createBiquadFilter();hpf.type='highpass';hpf.frequency.value=150;const pres=AC.createBiquadFilter();pres.type='peaking';pres.frequency.value=2800;pres.gain.value=4;const g=AC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);src.connect(hpf);hpf.connect(pres);pres.connect(g);g.connect(MG);src.start(t);src.stop(t+d+.1);},
+  rnbPad(t,p={}){const{volume:v=0.68,pitch:hz=196,decay:d=3.5}=p;[[1,0],[1.5,4],[2,-6],[3,2]].forEach(([rat,det])=>{const o=AC.createOscillator();o.type='sawtooth';o.frequency.value=hz*rat;o.detune.value=det;const lpf=AC.createBiquadFilter();lpf.type='lowpass';lpf.frequency.setValueAtTime(200,t);lpf.frequency.linearRampToValueAtTime(2200,t+.6);lpf.Q.value=1.2;const g=AC.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v*.2,t+.4);g.gain.exponentialRampToValueAtTime(.001,t+d);const rev=mkRev(.45);o.connect(lpf);lpf.connect(g);g.connect(MG);g.connect(rev);o.start(t);o.stop(t+d+.1);});},
+  rnbVox(t,p={}){const{volume:v=0.75,pitch:hz=392,decay:d=0.4}=p;[[1,1],[1.78,.45],[2.96,.22],[4.2,.12],[5.8,.06]].forEach(([h,a])=>{const o=AC.createOscillator();o.type='sine';o.frequency.value=hz*h;const g=AC.createGain();g.gain.setValueAtTime(v*a,t);g.gain.exponentialRampToValueAtTime(.001,t+d*(1-h*.04));o.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.05);});},
+  rnbBell(t,p={}){const{volume:v=0.65,pitch:hz=1047,decay:d=2.2}=p;[[1,1],[2.76,.4],[5.4,.18]].forEach(([rat,a])=>{const o=AC.createOscillator();o.type='sine';o.frequency.value=hz*rat;const g=AC.createGain();g.gain.setValueAtTime(v*a,t);g.gain.exponentialRampToValueAtTime(.001,t+d*(1.1-rat*.05));const rev=mkRev(.35);o.connect(g);g.connect(MG);g.connect(rev);o.start(t);o.stop(t+d+.1);});},
+
   // Generic piano note from frequency
   pianoNote(t,hz,v=0.8,d=1.4){[[1,1],[2,.5],[3,.33],[4,.25],[6,.15]].forEach(([h,a])=>{const o=AC.createOscillator();o.type='sine';o.frequency.value=hz*h;const g=AC.createGain();g.gain.setValueAtTime(v*a,t);g.gain.exponentialRampToValueAtTime(.001,t+d*(1-h*.04));o.connect(g);g.connect(MG);o.start(t);o.stop(t+d+.05);});}
 };
@@ -3913,8 +4172,53 @@ const AVAILABLE_TRACKS = [
   {id:'drumFloor',  label:'Floor Tom',   emoji:'🪘',sound:'drumFloor',  color:'#22DD66',params:{pitch:68, decay:0.5}, group:'DRUMS'},
   {id:'sample1',    label:'Sample 1',    emoji:'🎤',sound:'userSample', color:'#FF00FF',params:{volume:1},            group:'SAMPLES'},
   {id:'sample2',    label:'Sample 2',    emoji:'🎵',sound:'userSample', color:'#EE00EE',params:{volume:1},            group:'SAMPLES'},
+
+  // ── MODERN HIP-HOP ──
+  {id:'mhipKick',      label:'MHH Kick',      emoji:'🥁',sound:'mhipKick',      color:'#AA00FF',params:{pitch:52,decay:0.42},  group:'MOD-HH'},
+  {id:'mhipKickSnap',  label:'Kick Snap',      emoji:'💥',sound:'mhipKickSnap',  color:'#9900EE',params:{pitch:50,decay:0.3},   group:'MOD-HH'},
+  {id:'mhipSnare',     label:'MHH Snare',      emoji:'🔫',sound:'mhipSnare',     color:'#CC22FF',params:{decay:0.18},           group:'MOD-HH'},
+  {id:'mhipClap',      label:'MHH Clap',       emoji:'👏',sound:'mhipClap',      color:'#BB11EE',params:{decay:0.14},           group:'MOD-HH'},
+  {id:'mhipHH',        label:'Modern HH',      emoji:'🎩',sound:'mhipHH',        color:'#7700CC',params:{decay:0.04},           group:'MOD-HH'},
+  {id:'mhipHHOpen',    label:'Open HH Mod',    emoji:'🔓',sound:'mhipHHOpen',    color:'#8800DD',params:{decay:0.28},           group:'MOD-HH'},
+  {id:'mhipPerc',      label:'MHH Perc',       emoji:'🥁',sound:'mhipPerc',      color:'#9933FF',params:{pitch:350,decay:0.1},  group:'MOD-HH'},
+  {id:'mhip808',       label:'MHH 808',        emoji:'〰️',sound:'mhip808',       color:'#2200BB',params:{pitch:42,decay:1.6},   group:'MOD-HH'},
+  {id:'mhip808Punch',  label:'808 Vibe',       emoji:'👊',sound:'mhip808Punch',  color:'#3300CC',params:{pitch:48,decay:0.9},   group:'MOD-HH'},
+  {id:'mhipMelody',    label:'Melody Trap',    emoji:'🎹',sound:'mhipMelody',    color:'#FF5500',params:{pitch:523,decay:0.9},  group:'MOD-HH'},
+  {id:'mhipBrass',     label:'Brass Hit',      emoji:'🎺',sound:'mhipBrass',     color:'#FF7700',params:{pitch:311,decay:0.4},  group:'MOD-HH'},
+  {id:'mhipFlute',     label:'Sample Flute',   emoji:'🪈',sound:'mhipFlute',     color:'#FF9900',params:{pitch:659,decay:0.7},  group:'MOD-HH'},
+  {id:'mhipPad',       label:'Hazy Pad',       emoji:'☁️',sound:'mhipPad',       color:'#8833FF',params:{pitch:261,decay:2.8},  group:'MOD-HH'},
+  {id:'mhipAdlib',     label:'Adlib Vocal',    emoji:'🎤',sound:'mhipAdlib',     color:'#FF44BB',params:{pitch:440,decay:0.22}, group:'MOD-HH'},
+  // ── AFRO POP ──
+  {id:'afroKick',      label:'Afro Kick',      emoji:'🥁',sound:'afroKick',      color:'#FF6600',params:{pitch:58,decay:0.38},  group:'AFROPOP'},
+  {id:'afroSnare',     label:'Afro Snare',     emoji:'💥',sound:'afroSnare',     color:'#FF8800',params:{decay:0.2},            group:'AFROPOP'},
+  {id:'afroHH',        label:'Afro Hi-Hat',    emoji:'🎩',sound:'afroHH',        color:'#FFAA00',params:{decay:0.05},           group:'AFROPOP'},
+  {id:'afroHHOpen',    label:'Afro Open HH',   emoji:'🔓',sound:'afroHHOpen',    color:'#FFCC00',params:{decay:0.35},           group:'AFROPOP'},
+  {id:'afroPerc1',     label:'Afro Shekere',   emoji:'🎶',sound:'afroPerc1',     color:'#FF5500',params:{pitch:1200,decay:0.08},group:'AFROPOP'},
+  {id:'afroPerc2',     label:'Afro Talking',   emoji:'🥁',sound:'afroPerc2',     color:'#FF7722',params:{pitch:280,decay:0.18}, group:'AFROPOP'},
+  {id:'afroPerc3',     label:'Afro Agogo',     emoji:'🔔',sound:'afroPerc3',     color:'#FFAA33',params:{pitch:900,decay:0.12}, group:'AFROPOP'},
+  {id:'afroBass',      label:'Afro Bass',      emoji:'🔊',sound:'afroBass',      color:'#CC4400',params:{pitch:70,decay:0.55},  group:'AFROPOP'},
+  {id:'afroGuitar',    label:'Afro Guitar',    emoji:'🎸',sound:'afroGuitar',    color:'#FF6622',params:{pitch:330,decay:0.8},  group:'AFROPOP'},
+  {id:'afroPiano',     label:'Afro Piano',     emoji:'🎹',sound:'afroPiano',     color:'#FFBB44',params:{pitch:523,decay:0.7},  group:'AFROPOP'},
+  {id:'afroSynth',     label:'Afro Synth',     emoji:'🌟',sound:'afroSynth',     color:'#FF8833',params:{pitch:392,decay:0.6},  group:'AFROPOP'},
+  {id:'afroVox',       label:'Afro Vox Chop',  emoji:'🎤',sound:'afroVox',       color:'#FF9944',params:{pitch:349,decay:0.3},  group:'AFROPOP'},
+  {id:'afroChime',     label:'Afro Chime',     emoji:'✨',sound:'afroChime',     color:'#FFDD55',params:{pitch:1760,decay:1.2}, group:'AFROPOP'},
+  // ── R&B ──
+  {id:'rnbKick',       label:'R&B Kick',       emoji:'🥁',sound:'rnbKick',       color:'#FF0066',params:{pitch:55,decay:0.45},  group:'RNB'},
+  {id:'rnbSnare',      label:'R&B Snare',      emoji:'💫',sound:'rnbSnare',      color:'#FF2288',params:{decay:0.25},           group:'RNB'},
+  {id:'rnbHH',         label:'R&B Hi-Hat',     emoji:'🎩',sound:'rnbHH',         color:'#FF44AA',params:{decay:0.05},           group:'RNB'},
+  {id:'rnbClap',       label:'R&B Clap',       emoji:'👏',sound:'rnbClap',       color:'#FF66CC',params:{decay:0.2},            group:'RNB'},
+  {id:'rnbSnap',       label:'R&B Snap',       emoji:'🫰',sound:'rnbSnap',       color:'#FF88DD',params:{decay:0.06},           group:'RNB'},
+  {id:'rnbRide',       label:'Smooth Ride',    emoji:'⭕',sound:'rnbRide',       color:'#FF33BB',params:{decay:1.0},            group:'RNB'},
+  {id:'rnbBass',       label:'R&B Bass',       emoji:'〰️',sound:'rnbBass',       color:'#CC0044',params:{pitch:55,decay:1.2},   group:'RNB'},
+  {id:'rnbBassWarm',   label:'Warm Bass',      emoji:'🎸',sound:'rnbBassWarm',   color:'#DD0055',params:{pitch:62,decay:0.9},   group:'RNB'},
+  {id:'rnbKeys',       label:'Neo-Soul Keys',  emoji:'🎹',sound:'rnbKeys',       color:'#FF1177',params:{pitch:261.63,decay:2.0},group:'RNB'},
+  {id:'rnbChord',      label:'R&B Chord',      emoji:'🎼',sound:'rnbChord',      color:'#FF3399',params:{pitch:220,decay:2.5},  group:'RNB'},
+  {id:'rnbGuitar',     label:'Clean Guitar',   emoji:'🎸',sound:'rnbGuitar',     color:'#FF55AA',params:{pitch:247,decay:1.4},  group:'RNB'},
+  {id:'rnbPad',        label:'Lush R&B Pad',   emoji:'☁️',sound:'rnbPad',        color:'#CC2266',params:{pitch:196,decay:3.5},  group:'RNB'},
+  {id:'rnbVox',        label:'Vocal Chop R&B', emoji:'🎤',sound:'rnbVox',        color:'#FF44BB',params:{pitch:392,decay:0.4},  group:'RNB'},
+  {id:'rnbBell',       label:'Glass Bell',     emoji:'🔔',sound:'rnbBell',       color:'#FF99CC',params:{pitch:1047,decay:2.2}, group:'RNB'},
 ];
-const GRP_LABELS={KICKS:'⚡ KICKS',SNARES:'💥 SNARES','HI-HATS':'🎩 HI-HATS',CLAPS:'👏 CLAPS',BASS:'🔊 BASS','HH-BASS':'🔊 HIP-HOP BASS','HH-DRUMS':'🥁 HIP-HOP DRUMS','HH-MELODY':'🎹 HIP-HOP MELODY','HH-FX':'🌀 HIP-HOP FX',PERC:'🥁 PERCUSSION',CYMBALS:'🔔 CYMBALS',FX:'🌀 FX','FX-TRANS':'🌀 FX & TRANSITIONS',GUITAR:'🎸 GUITAR',PIANO:'🎹 PIANO',DRUMS:'🥁 DRUM KIT',SAMPLES:'🎤 SAMPLES','SYNTH-LEADS':'🔷 SYNTHS & LEADS','PADS':'☁️ PADS & ATMOSPHERE','MELODIC':'🎹 MELODIC INSTRUMENTS','VOCALS':'🎤 VOCAL CHOPS','AUDIO RECORDINGS':'🎵 RECORDINGS','VOCAL TAKES':'🎤 VOCAL TAKES','90S-DRUMS':'🥁 90s HIP-HOP DRUMS','90S-BASS':'🔊 90s BASS','90S-MELODY':'🎹 90s MELODIC','90S-FX':'💿 90s FX',PRESET:'🎛️ PRESETS',VIEW:'👁 VIEW'};
+const GRP_LABELS={KICKS:'⚡ KICKS',SNARES:'💥 SNARES','HI-HATS':'🎩 HI-HATS',CLAPS:'👏 CLAPS',BASS:'🔊 BASS','HH-BASS':'🔊 HIP-HOP BASS','HH-DRUMS':'🥁 HIP-HOP DRUMS','HH-MELODY':'🎹 HIP-HOP MELODY','HH-FX':'🌀 HIP-HOP FX',PERC:'🥁 PERCUSSION',CYMBALS:'🔔 CYMBALS',FX:'🌀 FX','FX-TRANS':'🌀 FX & TRANSITIONS',GUITAR:'🎸 GUITAR',PIANO:'🎹 PIANO',DRUMS:'🥁 DRUM KIT',SAMPLES:'🎤 SAMPLES','SYNTH-LEADS':'🔷 SYNTHS & LEADS','PADS':'☁️ PADS & ATMOSPHERE','MELODIC':'🎹 MELODIC INSTRUMENTS','VOCALS':'🎤 VOCAL CHOPS','AUDIO RECORDINGS':'🎵 RECORDINGS','VOCAL TAKES':'🎤 VOCAL TAKES','MOD-HH':'🔥 MODERN HIP-HOP','AFROPOP':'🌍 AFRO POP','RNB':'💜 R&B','90S-DRUMS':'🥁 90s HIP-HOP DRUMS','90S-BASS':'🔊 90s BASS','90S-MELODY':'🎹 90s MELODIC','90S-FX':'💿 90s FX',PRESET:'🎛️ PRESETS',VIEW:'👁 VIEW'};
 
 let STEPS=32;
 let pattern = [];
@@ -4269,6 +4573,233 @@ const PRESETS={
     if(subi>=0){p[subi][0]=p[subi][8]=1;}
     return p;},
 
+  // ── MODERN HIP-HOP PRESETS ──
+  'Modern HipHop':()=>{const p=blank();
+    const ki=TRACKS.findIndex(t=>t.id==='mhipKick'||t.id==='mhipKickSnap');
+    const si=TRACKS.findIndex(t=>t.id==='mhipSnare');
+    const ci=TRACKS.findIndex(t=>t.id==='mhipClap');
+    const hi=TRACKS.findIndex(t=>t.id==='mhipHH');
+    const ho=TRACKS.findIndex(t=>t.id==='mhipHHOpen');
+    const bi=TRACKS.findIndex(t=>t.id==='mhip808');
+    const mi=TRACKS.findIndex(t=>t.id==='mhipMelody');
+    const pi=TRACKS.findIndex(t=>t.id==='mhipPad');
+    // Kick: 808-trap placement
+    if(ki>=0){p[ki][0]=p[ki][3]=p[ki][8]=p[ki][10]=1;}
+    // Snare on 2 and 4 (steps 4, 12)
+    if(si>=0){p[si][4]=p[si][12]=1;}
+    // Clap layered with snare
+    if(ci>=0){p[ci][4]=p[ci][12]=1;}
+    // Hi-hat: constant 16ths with slight open on offbeats
+    if(hi>=0){for(let i=0;i<STEPS;i++)p[hi][i]=1;}
+    if(ho>=0){p[ho][2]=p[ho][6]=p[ho][10]=p[ho][14]=1;}
+    // 808 bass hits
+    if(bi>=0){p[bi][0]=p[bi][2]=p[bi][8]=p[bi][11]=1;}
+    // Melody stab
+    if(mi>=0){p[mi][0]=p[mi][4]=p[mi][8]=p[mi][12]=1;}
+    // Pad wash
+    if(pi>=0){p[pi][0]=p[pi][8]=1;}
+    return p;},
+
+  'Drill Modern':()=>{const p=blank();
+    const ki=TRACKS.findIndex(t=>t.id==='mhipKickSnap'||t.id==='mhipKick');
+    const si=TRACKS.findIndex(t=>t.id==='mhipSnare'||t.id==='drillSnare');
+    const ci=TRACKS.findIndex(t=>t.id==='mhipClap');
+    const hi=TRACKS.findIndex(t=>t.id==='mhipHH');
+    const ho=TRACKS.findIndex(t=>t.id==='mhipHHOpen');
+    const bi=TRACKS.findIndex(t=>t.id==='mhip808'||t.id==='mhip808Punch');
+    const pi=TRACKS.findIndex(t=>t.id==='mhipPerc');
+    // Drill kick pattern
+    if(ki>=0){p[ki][0]=p[ki][3]=p[ki][5]=p[ki][8]=p[ki][11]=p[ki][14]=1;}
+    if(si>=0){p[si][4]=p[si][12]=1;}
+    if(ci>=0){p[ci][4]=p[ci][10]=p[ci][12]=1;}
+    // Hi-hat rolls
+    if(hi>=0){for(let i=0;i<STEPS;i+=2)p[hi][i]=1;}
+    if(ho>=0){p[ho][6]=p[ho][7]=p[ho][14]=p[ho][15]=1;}
+    if(bi>=0){p[bi][0]=p[bi][4]=p[bi][8]=p[bi][13]=1;}
+    if(pi>=0){p[pi][2]=p[pi][6]=p[pi][10]=p[pi][14]=1;}
+    return p;},
+
+  'Trap Melodic':()=>{const p=blank();
+    const ki=TRACKS.findIndex(t=>t.id==='mhipKick');
+    const si=TRACKS.findIndex(t=>t.id==='mhipSnare');
+    const hi=TRACKS.findIndex(t=>t.id==='mhipHH');
+    const bi=TRACKS.findIndex(t=>t.id==='mhip808');
+    const mi=TRACKS.findIndex(t=>t.id==='mhipMelody');
+    const fi=TRACKS.findIndex(t=>t.id==='mhipFlute');
+    const pi=TRACKS.findIndex(t=>t.id==='mhipPad');
+    const ai=TRACKS.findIndex(t=>t.id==='mhipAdlib');
+    if(ki>=0){p[ki][0]=p[ki][6]=p[ki][9]=p[ki][12]=1;}
+    if(si>=0){p[si][4]=p[si][12]=1;}
+    if(hi>=0){for(let i=0;i<STEPS;i++)p[hi][i]=1;}
+    if(bi>=0){p[bi][0]=p[bi][3]=p[bi][7]=p[bi][10]=1;}
+    if(mi>=0){p[mi][0]=p[mi][4]=p[mi][8]=1;}
+    if(fi>=0){p[fi][2]=p[fi][6]=p[fi][10]=p[fi][14]=1;}
+    if(pi>=0){p[pi][0]=p[pi][8]=1;}
+    if(ai>=0){p[ai][3]=p[ai][11]=1;}
+    return p;},
+
+  // ── AFRO POP PRESETS ──
+  'Afro Pop':()=>{const p=blank();
+    const ki=TRACKS.findIndex(t=>t.id==='afroKick');
+    const si=TRACKS.findIndex(t=>t.id==='afroSnare');
+    const hi=TRACKS.findIndex(t=>t.id==='afroHH');
+    const ho=TRACKS.findIndex(t=>t.id==='afroHHOpen');
+    const p1=TRACKS.findIndex(t=>t.id==='afroPerc1');
+    const p2=TRACKS.findIndex(t=>t.id==='afroPerc2');
+    const bi=TRACKS.findIndex(t=>t.id==='afroBass');
+    const gi=TRACKS.findIndex(t=>t.id==='afroGuitar');
+    const pi=TRACKS.findIndex(t=>t.id==='afroPiano');
+    // Afro kick: syncopated
+    if(ki>=0){p[ki][0]=p[ki][3]=p[ki][8]=p[ki][11]=1;}
+    // Snare: 2+4 with extra ghost
+    if(si>=0){p[si][4]=p[si][10]=p[si][12]=1;}
+    // Hi-hat: 8th-note groove
+    if(hi>=0){for(let i=0;i<STEPS;i+=2)p[hi][i]=1;}
+    if(ho>=0){p[ho][3]=p[ho][7]=p[ho][11]=p[ho][15]=1;}
+    // Percussion: shekere on offbeats
+    if(p1>=0){[1,3,5,7,9,11,13,15].forEach(i=>{if(i<STEPS)p[p1][i]=1;});}
+    // Talking drum accent
+    if(p2>=0){p[p2][2]=p[p2][6]=p[p2][10]=p[p2][14]=1;}
+    // Bass: Afro groove
+    if(bi>=0){p[bi][0]=p[bi][3]=p[bi][6]=p[bi][8]=p[bi][11]=1;}
+    // Guitar: offbeat chops
+    if(gi>=0){p[gi][2]=p[gi][6]=p[gi][10]=p[gi][14]=1;}
+    // Piano stab
+    if(pi>=0){p[pi][0]=p[pi][4]=p[pi][8]=p[pi][12]=1;}
+    return p;},
+
+  'Afro Fusion':()=>{const p=blank();
+    const ki=TRACKS.findIndex(t=>t.id==='afroKick');
+    const si=TRACKS.findIndex(t=>t.id==='afroSnare');
+    const hi=TRACKS.findIndex(t=>t.id==='afroHH');
+    const p1=TRACKS.findIndex(t=>t.id==='afroPerc1');
+    const p2=TRACKS.findIndex(t=>t.id==='afroPerc2');
+    const p3=TRACKS.findIndex(t=>t.id==='afroPerc3');
+    const bi=TRACKS.findIndex(t=>t.id==='afroBass');
+    const sy=TRACKS.findIndex(t=>t.id==='afroSynth');
+    const ch=TRACKS.findIndex(t=>t.id==='afroChime');
+    // Kick: heavier cross-rhythm
+    if(ki>=0){p[ki][0]=p[ki][4]=p[ki][7]=p[ki][8]=p[ki][12]=1;}
+    if(si>=0){p[si][4]=p[si][9]=p[si][12]=1;}
+    // 16th hi-hat
+    if(hi>=0){for(let i=0;i<STEPS;i++)p[hi][i]=1;}
+    // Shekere constant 8ths
+    if(p1>=0){for(let i=0;i<STEPS;i+=2)p[p1][i]=1;}
+    // Talking drum polyrhythm
+    if(p2>=0){[0,3,6,9,12,15].forEach(i=>{if(i<STEPS)p[p2][i]=1;});}
+    // Agogo bell
+    if(p3>=0){[2,5,8,11,14].forEach(i=>{if(i<STEPS)p[p3][i]=1;});}
+    if(bi>=0){p[bi][0]=p[bi][3]=p[bi][7]=p[bi][10]=p[bi][13]=1;}
+    if(sy>=0){p[sy][0]=p[sy][4]=p[sy][8]=1;}
+    if(ch>=0){p[ch][0]=p[ch][8]=1;}
+    return p;},
+
+  'Amapiano':()=>{const p=blank();
+    const ki=TRACKS.findIndex(t=>t.id==='afroKick');
+    const si=TRACKS.findIndex(t=>t.id==='afroSnare');
+    const hi=TRACKS.findIndex(t=>t.id==='afroHH');
+    const p1=TRACKS.findIndex(t=>t.id==='afroPerc1');
+    const bi=TRACKS.findIndex(t=>t.id==='afroBass');
+    const pi=TRACKS.findIndex(t=>t.id==='afroPiano');
+    const sy=TRACKS.findIndex(t=>t.id==='afroSynth');
+    const vx=TRACKS.findIndex(t=>t.id==='afroVox');
+    // Amapiano log drum feel — syncopated kick
+    if(ki>=0){p[ki][0]=p[ki][2]=p[ki][5]=p[ki][8]=p[ki][10]=p[ki][13]=1;}
+    if(si>=0){p[si][4]=p[si][12]=1;}
+    if(hi>=0){for(let i=0;i<STEPS;i+=2)p[hi][i]=1;}
+    // Shaker as log drum proxy
+    if(p1>=0){for(let i=0;i<STEPS;i++)p[p1][i]=1;}
+    if(bi>=0){p[bi][0]=p[bi][4]=p[bi][8]=p[bi][12]=1;}
+    // Piano: melodic stabs — signature Amapiano element
+    if(pi>=0){[0,2,4,6,8,10,12,14].forEach(i=>p[pi][i]=1);}
+    if(sy>=0){p[sy][0]=p[sy][8]=1;}
+    if(vx>=0){p[vx][4]=p[vx][12]=1;}
+    return p;},
+
+  // ── R&B PRESETS ──
+  'R&B Smooth':()=>{const p=blank();
+    const ki=TRACKS.findIndex(t=>t.id==='rnbKick');
+    const si=TRACKS.findIndex(t=>t.id==='rnbSnare');
+    const hi=TRACKS.findIndex(t=>t.id==='rnbHH');
+    const ci=TRACKS.findIndex(t=>t.id==='rnbClap');
+    const ri=TRACKS.findIndex(t=>t.id==='rnbRide');
+    const bi=TRACKS.findIndex(t=>t.id==='rnbBass');
+    const ki2=TRACKS.findIndex(t=>t.id==='rnbKeys');
+    const ch=TRACKS.findIndex(t=>t.id==='rnbChord');
+    const pa=TRACKS.findIndex(t=>t.id==='rnbPad');
+    // Kick: deliberate, laid-back feel
+    if(ki>=0){p[ki][0]=p[ki][3]=p[ki][8]=p[ki][11]=1;}
+    // Snare: 2 + 4
+    if(si>=0){p[si][4]=p[si][12]=1;}
+    // Ride as main groove carrier
+    if(ri>=0){for(let i=0;i<STEPS;i+=2)p[ri][i]=1;}
+    // Hi-hat fills
+    if(hi>=0){[0,1,4,8,9,12].forEach(i=>{if(i<STEPS)p[hi][i]=1;});}
+    // Clap double on 4
+    if(ci>=0){p[ci][12]=p[ci][13]=1;}
+    // Bass: smooth groove
+    if(bi>=0){p[bi][0]=p[bi][2]=p[bi][6]=p[bi][8]=p[bi][14]=1;}
+    // Keys: melodic fills
+    if(ki2>=0){p[ki2][0]=p[ki2][4]=p[ki2][8]=p[ki2][12]=1;}
+    // Chord swells
+    if(ch>=0){p[ch][0]=p[ch][8]=1;}
+    // Pad underneath
+    if(pa>=0){p[pa][0]=p[pa][8]=1;}
+    return p;},
+
+  'Neo Soul':()=>{const p=blank();
+    const ki=TRACKS.findIndex(t=>t.id==='rnbKick');
+    const si=TRACKS.findIndex(t=>t.id==='rnbSnare');
+    const hi=TRACKS.findIndex(t=>t.id==='rnbHH');
+    const sn=TRACKS.findIndex(t=>t.id==='rnbSnap');
+    const bi=TRACKS.findIndex(t=>t.id==='rnbBassWarm');
+    const ki2=TRACKS.findIndex(t=>t.id==='rnbKeys');
+    const gu=TRACKS.findIndex(t=>t.id==='rnbGuitar');
+    const vx=TRACKS.findIndex(t=>t.id==='rnbVox');
+    const be=TRACKS.findIndex(t=>t.id==='rnbBell');
+    // Laid-back kick (D'Angelo / Questlove feel)
+    if(ki>=0){p[ki][0]=p[ki][4]=p[ki][6]=p[ki][9]=p[ki][12]=1;}
+    if(si>=0){p[si][4]=p[si][12]=1;}
+    // Snaps as rhythmic texture
+    if(sn>=0){[2,6,10,14].forEach(i=>{if(i<STEPS)p[sn][i]=1;});}
+    // Loose hi-hat
+    if(hi>=0){[0,3,6,8,11,14].forEach(i=>{if(i<STEPS)p[hi][i]=1;});}
+    // Warm fingered bass
+    if(bi>=0){p[bi][0]=p[bi][3]=p[bi][7]=p[bi][8]=p[bi][11]=1;}
+    // Keys fills
+    if(ki2>=0){p[ki2][0]=p[ki2][4]=p[ki2][8]=p[ki2][12]=1;}
+    // Guitar on offbeats
+    if(gu>=0){p[gu][2]=p[gu][6]=p[gu][10]=p[gu][14]=1;}
+    // Vocal chop accents
+    if(vx>=0){p[vx][1]=p[vx][9]=1;}
+    // Bell texture
+    if(be>=0){p[be][0]=p[be][8]=1;}
+    return p;},
+
+  'Trap R&B':()=>{const p=blank();
+    const ki=TRACKS.findIndex(t=>t.id==='rnbKick'||t.id==='mhipKick');
+    const si=TRACKS.findIndex(t=>t.id==='rnbSnare'||t.id==='mhipSnare');
+    const hi=TRACKS.findIndex(t=>t.id==='mhipHH'||t.id==='rnbHH');
+    const bi=TRACKS.findIndex(t=>t.id==='rnbBass'||t.id==='mhip808');
+    const ki2=TRACKS.findIndex(t=>t.id==='rnbKeys');
+    const ch=TRACKS.findIndex(t=>t.id==='rnbChord');
+    const pa=TRACKS.findIndex(t=>t.id==='rnbPad');
+    const vx=TRACKS.findIndex(t=>t.id==='rnbVox');
+    const be=TRACKS.findIndex(t=>t.id==='rnbBell');
+    // Trap-influenced placement
+    if(ki>=0){p[ki][0]=p[ki][5]=p[ki][8]=p[ki][10]=1;}
+    if(si>=0){p[si][4]=p[si][12]=1;}
+    // Trap hats
+    if(hi>=0){for(let i=0;i<STEPS;i++)p[hi][i]=1;}
+    if(bi>=0){p[bi][0]=p[bi][3]=p[bi][8]=p[bi][11]=1;}
+    if(ki2>=0){p[ki2][0]=p[ki2][8]=1;}
+    if(ch>=0){p[ch][0]=p[ch][4]=p[ch][8]=p[ch][12]=1;}
+    if(pa>=0){p[pa][0]=1;}
+    if(vx>=0){p[vx][2]=p[vx][6]=p[vx][10]=p[vx][14]=1;}
+    if(be>=0){p[be][4]=p[be][12]=1;}
+    return p;},
+
+
 };
 function blank(){return TRACKS.map(()=>Array(STEPS).fill(0));}
 
@@ -4289,8 +4820,7 @@ function schedNote(step,time){
       const sbuf=sampleBufs[tr.id]; if(!sbuf)return;
       const cs=clipState[tr.id];
       if(cs && step!==cs.startStep)return;
-      // Always use the real audio duration — step-grid length is only for layout/display.
-      // Using step math here caused clips to be cut short or padded when BPM changed.
+      // Always use real audio duration — step-grid math gives wrong results when BPM changes
       const clipDurSec=sbuf.duration;
       S.userSampleClipped(nt,prm,sbuf,clipDurSec);
     } else S[tr.sound]?.(nt,prm);
@@ -4504,7 +5034,6 @@ function cycleVel(ti,s,btn){
   btn.style.opacity=velocities[ti][s]/100*.5+.5;showToast(`Vel: ${velocities[ti][s]}%`);
 }
 function refreshGrid(){
-  // Refresh step buttons for regular (non-clip) tracks
   document.querySelectorAll('.step-btn').forEach(btn=>{
     const ti=+btn.dataset.track, s=+btn.dataset.step;
     if(ti>=TRACKS.length) return;
@@ -4512,7 +5041,6 @@ function refreshGrid(){
     btn.classList.toggle('on',on);
     btn.style.opacity=on?velocities[ti][s]/100*.5+.5:'';
   });
-  // Re-render all clip blocks so recordings/vocal takes always show their visual block
   let clipIdx=0;
   TRACKS.forEach((tr,ti)=>{
     if(tr.sound!=='userSample') return;
@@ -4548,17 +5076,12 @@ function changeSteps(n){
 
 // ── Kicks ──
 function updateKicksVis(){
-  // Look up kick tracks by their fixed IDs, not by raw index.
-  // Using [0,1,2] was wrong: after any preset load those indices
-  // no longer point to kicks — they point to whatever track ended
-  // up first, hiding recordings / vocal takes instead.
   const KICK_IDS = ['kick', 'kickHard', 'kickTape'];
   const allLeftItems  = Array.from(document.getElementById('seq-left').children);
   const allRightItems = Array.from(document.getElementById('seq-right').children);
-
   KICK_IDS.forEach((kickId, ki)=>{
     const ti = TRACKS.findIndex(t => t.id === kickId);
-    if(ti < 0) return; // kick not in current track list — nothing to hide
+    if(ti < 0) return;
     const lbl = document.querySelector(`.track-lbl[data-track="${ti}"]`);
     if(!lbl) return;
     const vis = ki === activeKick;
@@ -5674,21 +6197,16 @@ function addPianoRecordingToSequencer(recording) {
 }
 
 // ── Kicks panel ──
-const kicksToggle=document.getElementById('kicks-toggle');
+// Kicks toggle replaced by AI button — keep kick-pick-btn wiring for activeKick only
 const kicksPanel=document.getElementById('kicks-panel');
-kicksToggle.addEventListener('click',e=>{
-  e.stopPropagation();
-  kicksPanel.classList.toggle('hidden');
-  kicksToggle.classList.toggle('open',!kicksPanel.classList.contains('hidden'));
-  if(!kicksPanel.classList.contains('hidden')){
-    const r=kicksToggle.getBoundingClientRect();
-    kicksPanel.style.top=(r.bottom+6)+'px';
-    kicksPanel.style.left=r.left+'px';
-  }
+document.querySelectorAll('.kick-pick-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    activeKick=+btn.dataset.ki;
+    updateKicksVis();
+    const lbls=['Standard','Kick Hard','Kick Tape'];
+    showToast('Kick: '+lbls[activeKick]);
+  });
 });
-document.querySelectorAll('.kick-pick-btn').forEach(btn=>{btn.addEventListener('click',()=>{activeKick=+btn.dataset.ki;updateKicksVis();kicksPanel.classList.add('hidden');kicksToggle.classList.remove('open');const lbls=['Standard','Kick Hard','Kick Tape'];kicksToggle.textContent='🥁 '+lbls[activeKick]+' ▾';showToast('Kick: '+lbls[activeKick]);});});
-document.addEventListener('click',()=>{kicksPanel.classList.add('hidden');kicksToggle.classList.remove('open');});
-kicksPanel.addEventListener('click',e=>e.stopPropagation());
 document.addEventListener('click',()=>{ kicksPanel.classList.add('hidden'); kicksToggle.classList.remove('open'); });
 
 // ── Transport ──
@@ -5792,7 +6310,6 @@ function loadPreset(name){
   if(!newTracks.length){ showToast('Preset has no active tracks', true); return; }
 
   // Step 3: preserve any user recordings already in the sequencer
-  // Include VOCAL TAKES and any other userSample group — not just 'AUDIO RECORDINGS'
   savedTRACKS.forEach(tr => {
     if((tr.group === 'AUDIO RECORDINGS' || tr.group === 'VOCAL TAKES' || tr.sound === 'userSample') && !seenIds.has(tr.id)){
       seenIds.add(tr.id);
@@ -5883,8 +6400,10 @@ function clearUser(){ currentUser=null; try{localStorage.removeItem('gigo_user')
 function getPaymentExpiry(){ try{ return +localStorage.getItem('gigo_paid_until')||0; }catch(e){return 0;} }
 function setPaymentExpiry(ms){ try{ localStorage.setItem('gigo_paid_until',ms); }catch(e){} }
 function isPaid(){
-  if(!currentUser?.createdAt) return false;
-  if(Date.now()-currentUser.createdAt < 7*24*60*60*1000) return true; // 1 week free trial
+  // Used internally (non-export checks). Free trial = "paid" for general use.
+  // For export specifically, use checkExportAccess() which blocks trial users.
+  if(!currentUser || !currentUser.createdAt) return false;
+  if((Date.now() - currentUser.createdAt) < 1*24*60*60*1000) return true; // 1-day trial
   return Date.now() < getPaymentExpiry();
 }
 function checkPaymentStatus(){
@@ -5896,11 +6415,11 @@ function checkPaymentStatus(){
 }
 function hoursUntilPaywall(){
   if(!currentUser?.createdAt) return 0;
-  return Math.max(0, 168-(Date.now()-currentUser.createdAt)/(1000*60*60)); // 168h = 1 week
+  return Math.max(0, 24-(Date.now()-currentUser.createdAt)/(1000*60*60)); // 24h = 1 day
 }
 function daysUntilTrialEnd(){
   if(!currentUser?.createdAt) return 0;
-  return Math.max(0, Math.ceil(7 - (Date.now()-currentUser.createdAt)/(1000*60*60*24)));
+  return Math.max(0, Math.ceil(1 - (Date.now()-currentUser.createdAt)/(1000*60*60*24)));
 }
 function daysUntilExpiry(){
   const exp = getPaymentExpiry();
@@ -5998,7 +6517,7 @@ document.getElementById('btn-signup').addEventListener('click', async () => {
       saveUser(user);
       loginModal.classList.remove('open');
       updateLoginButton();
-      showToast('🎉 Account created! First week FREE — enjoy!');
+      showToast('🎉 Account created! First 24 hours FREE — enjoy!');
       startFreeCountdown();
     }
   } catch(err){
@@ -6037,7 +6556,7 @@ function startFreeCountdown(){
     if(!currentUser || isGuestUser()){ clearInterval(iv); return; }
     updateAccountButton();
     if(hoursUntilPaywall()<=0) clearInterval(iv);
-  }, 60*60000); // check every hour for 1-week trial
+  }, 60*60000); // check every hour for 1-day trial
 }
 if(currentUser && isLoggedInUser()) startFreeCountdown();
 
@@ -6057,13 +6576,30 @@ function checkExportAccess(onGranted){
     loginModal.classList.add('open');
     return;
   }
-  // 3. Logged in, within free day OR already paid
-  if(isPaid()){
+  // 3. Free trial — blocked from export, must pay
+  if(isInFreeTrial()){
+    showPaywall(onGranted);
+    showToast('🔒 Export requires a paid plan — trial users cannot export', true);
+    return;
+  }
+  // 4. Has active paid subscription
+  if(hasPaidAccess()){
     onGranted();
     return;
   }
-  // 4. Logged in but free day expired — show paywall
+  // 5. No active plan at all — show paywall
   showPaywall(onGranted);
+}
+
+// Returns true ONLY during the 1-day free trial window
+function isInFreeTrial(){
+  if(!currentUser || !currentUser.createdAt) return false;
+  return (Date.now() - currentUser.createdAt) < 1*24*60*60*1000;
+}
+
+// Returns true only if the user has an active PAID subscription (past the trial)
+function hasPaidAccess(){
+  return Date.now() < getPaymentExpiry();
 }
 
 function showPaywall(onGranted){
@@ -6072,48 +6608,107 @@ function showPaywall(onGranted){
   paywallModal._onGranted = onGranted;
 }
 
-// Paywall buttons
+// ── Payment constants ──
+const MPESA_NUMBER  = '0794742868';
+const PAYPAL_LINK   = 'https://www.paypal.com/paypalme/diorarlone/5';
+const WEEKLY_PRICE  = '$5';
+
+// ── Paywall close ──
 document.getElementById('paywall-close').addEventListener('click', ()=>{
   paywallModal.classList.remove('open');
-  showToast('Export locked — $3/week unlocks it');
+  showToast('Export locked — ' + WEEKLY_PRICE + '/week unlocks it');
 });
 
+// ── M-Pesa handler (paywall modal) ──
+document.getElementById('mpesa-manual-btn').addEventListener('click', ()=>{
+  openMpesaPayment();
+});
+
+// ── PayPal handler (paywall modal) ──
 document.getElementById('paypal-manual-btn').addEventListener('click', ()=>{
-  // PayPal payment flow
   openPayPalPayment();
 });
 
+// ── Account modal payment buttons ──
+const acctMpesaBtn  = document.getElementById('acct-mpesa-btn');
+const acctPaypalBtn = document.getElementById('acct-paypal-btn');
+if(acctMpesaBtn)  acctMpesaBtn.addEventListener('click',  ()=>openMpesaPayment());
+if(acctPaypalBtn) acctPaypalBtn.addEventListener('click', ()=>openPayPalPayment());
+
+function openMpesaPayment(){
+  paywallModal.classList.remove('open');
+  // Show M-Pesa instructions overlay
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:16px';
+  overlay.innerHTML = `
+    <div style="background:#0a0010;border:2px solid #00a651;border-radius:16px;padding:28px 24px;max-width:380px;width:100%;text-align:center;box-shadow:0 0 40px rgba(0,166,81,.3)">
+      <div style="font-size:2.4rem;margin-bottom:10px">📱</div>
+      <div style="font-family:var(--font-display);font-size:1.05rem;font-weight:900;color:#00ff88;letter-spacing:.06em;margin-bottom:16px">M-PESA PAYMENT</div>
+
+      <div style="background:rgba(0,166,81,.1);border:1px solid rgba(0,166,81,.3);border-radius:10px;padding:14px;margin-bottom:18px;text-align:left">
+        <div style="font-size:.72rem;color:rgba(255,255,255,.5);letter-spacing:.12em;margin-bottom:6px">SEND PAYMENT TO</div>
+        <div style="font-family:var(--font-display);font-size:1.6rem;font-weight:900;color:#fff;letter-spacing:.08em">${MPESA_NUMBER}</div>
+        <div style="font-size:.7rem;color:rgba(255,255,255,.4);margin-top:4px">Safaricom M-Pesa</div>
+      </div>
+
+      <div style="background:rgba(159,0,255,.08);border:1px solid rgba(159,0,255,.2);border-radius:8px;padding:12px;margin-bottom:18px">
+        <div style="font-size:.7rem;color:var(--text-muted);margin-bottom:4px">AMOUNT</div>
+        <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:900;color:var(--purple-bright)">${WEEKLY_PRICE} / week</div>
+        <div style="font-size:.65rem;color:var(--text-muted);margin-top:3px">approx. KES 650</div>
+      </div>
+
+      <div style="font-size:.72rem;color:rgba(255,255,255,.5);margin-bottom:16px;line-height:1.7;text-align:left;padding:0 4px">
+        <strong style="color:#fff">Steps:</strong><br>
+        1. Open <strong style="color:#00ff88">M-Pesa</strong> on your Safaricom phone<br>
+        2. Select <strong style="color:#fff">Send Money</strong><br>
+        3. Enter number: <strong style="color:#00ff88">${MPESA_NUMBER}</strong><br>
+        4. Enter amount: <strong style="color:#fff">KES 650</strong><br>
+        5. Enter PIN and confirm<br>
+        6. Come back and click <strong style="color:#00ff88">I PAID</strong>
+      </div>
+
+      <button id="mpesa-confirm-btn"
+        style="width:100%;padding:13px;background:linear-gradient(135deg,#00a651,#007a3d);border:none;border-radius:10px;color:#fff;font-weight:800;font-size:.9rem;cursor:pointer;font-family:var(--font-display);letter-spacing:.06em;margin-bottom:10px;box-shadow:0 4px 16px rgba(0,166,81,.4)">
+        ✅ I PAID — UNLOCK NOW
+      </button>
+      <button id="mpesa-cancel-btn"
+        style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:.72rem;opacity:.7;text-decoration:underline">
+        Cancel
+      </button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#mpesa-confirm-btn').addEventListener('click', ()=>{
+    document.body.removeChild(overlay);
+    handlePaymentComplete('mpesa');
+  });
+  overlay.querySelector('#mpesa-cancel-btn').addEventListener('click', ()=>{
+    document.body.removeChild(overlay);
+  });
+}
+
 function openPayPalPayment(){
-  // PayPal.me link — replace YOUR_PAYPAL with your actual PayPal.me username
-  const PAYPAL_ME = 'https://www.paypal.com/paypalme/diorarlone/3';
-  // Open PayPal in new window
-  const win = window.open(PAYPAL_ME, '_blank', 'width=500,height=700');
-  // Poll for window close = assume payment done
-  // In production use PayPal IPN/webhook to verify
+  paywallModal.classList.remove('open');
+  const win = window.open(PAYPAL_LINK, '_blank', 'width=520,height=720');
   showToast('💳 Complete payment in the PayPal window...');
   const poll = setInterval(()=>{
-    if(win && win.closed){
-      clearInterval(poll);
-      handlePaymentComplete();
-    }
+    if(win && win.closed){ clearInterval(poll); handlePaymentComplete('paypal'); }
   }, 800);
-  // Also offer manual confirm after 5s in case popup blocked
   setTimeout(()=>{
     if(!win || win.closed) return;
-    const confirmed = confirm('Did you complete the PayPal payment? Click OK after paying to unlock export.');
-    if(confirmed) handlePaymentComplete();
+    const confirmed = confirm('Did you complete the PayPal payment ($5)? Click OK after paying to unlock export.');
+    if(confirmed) handlePaymentComplete('paypal');
   }, 5000);
 }
 
-function handlePaymentComplete(){
-  // Grant 7 days from now
+function handlePaymentComplete(method){
   const expiry = Date.now() + 7*24*60*60*1000;
   setPaymentExpiry(expiry);
   paywallModal.classList.remove('open');
-  showToast('✅ Payment received! Export unlocked for 7 days 🎉');
+  const methodName = method === 'mpesa' ? 'M-Pesa' : 'PayPal';
+  showToast('✅ ' + methodName + ' payment confirmed! Full access unlocked for 7 days 🎉');
   updateLoginButton();
   checkPaymentStatus();
-  // Resume the export they were trying to do
   if(paywallModal._onGranted){
     paywallModal._onGranted();
     paywallModal._onGranted = null;
@@ -6134,10 +6729,16 @@ function openExportModal(){
     // Show paid status badge
     const badge = document.getElementById('export-paid-badge');
     if(badge){
-      const h = hoursUntilPaywall();
-      if(h > 0) badge.textContent = Math.ceil(h)+'h free remaining';
-      else if(isPaid()) badge.textContent = '✅ Paid · Active';
-      else badge.textContent = '';
+      if(hasPaidAccess()){
+        const d = daysUntilExpiry();
+        badge.textContent = '✅ Paid · ' + d + ' day' + (d===1?'':'s') + ' left';
+        badge.style.background = 'rgba(0,255,100,.12)';
+        badge.style.color = '#00ff88';
+      } else {
+        badge.textContent = '🔒 Paid access required';
+        badge.style.background = 'rgba(255,60,60,.12)';
+        badge.style.color = '#ff6666';
+      }
     }
 
     // ── Option 1: Record live beat (always shown) ──
@@ -7370,7 +7971,7 @@ function addClipToSequencer({ id, label, emoji, color, group, audioBuf }){
   // ── 3. Register buffer ──
   sampleBufs[id] = audioBuf;
 
-  // ── 4. Set clip state: store real duration so playback is never affected by BPM changes ──
+  // ── 4. Set clip state: start=0, length=exact recording length ──
   clipState[id] = { startStep: 0, lengthSteps: neededSteps, realDuration: audioBuf.duration };
 
   // ── 5. Build track ──
@@ -10026,7 +10627,6 @@ function openMixerPopover(ti, anchorEl){
 const _origBuildGrid = buildGrid;
 window.buildGrid = function(){
   _origBuildGrid();
-  // Ensure clip blocks and step buttons are always rendered after every grid rebuild
   refreshGrid();
   // Add mixer button (⚙) to each track label
   document.querySelectorAll('.track-lbl').forEach((lbl, idx)=>{
@@ -10136,7 +10736,7 @@ window.schedNote = function(step, time){
       if(!sbuf) return;
       const cs = clipState[tr.id];
       if(cs && step !== cs.startStep) return;
-      // Always use the real audio duration — step-grid math gives wrong results when BPM changes.
+      // Always use real audio duration — step-grid math gives wrong results when BPM changes
       const playDur = sbuf.duration;
       S.userSampleClipped(nt, prm, sbuf, playDur, pan);
     } else {
@@ -10626,6 +11226,281 @@ function startOcViz(){
   }
   frame();
 }
+})();
+
+
+
+
+
+
+
+
+
+
+// ═══════════════════════════════════════════════════════════════════
+//  GIGO PAMBA  — AI Beat Assistant  (powered by Groq)
+// ═══════════════════════════════════════════════════════════════════
+(function initGigoPamba(){
+  // ── Groq key hardcoded — user can override via KEY button ──
+  var DEFAULT_GROQ_KEY = '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';
+  var GROQ_MODEL       = 'llama-3.3-70b-versatile';
+  var STORAGE_KEY      = 'gigo_pamba_key';
+
+  var aiHistory = [];
+  var aiOpen    = false;
+
+  var panel    = document.getElementById('ai-chat-panel');
+  var overlay  = document.getElementById('ai-panel-overlay');
+  var openBtn  = document.getElementById('ai-chat-btn');
+  var closeBtn = document.getElementById('ai-close-btn');
+  var clearBtn = document.getElementById('ai-clear-btn');
+  var messages = document.getElementById('ai-messages');
+  var inputEl  = document.getElementById('ai-input');
+  var sendBtn  = document.getElementById('ai-send-btn');
+  var typing   = document.getElementById('ai-typing');
+  var statusLbl= document.getElementById('ai-status-lbl');
+  var keyBar   = document.getElementById('ai-key-bar');
+  var keyInput = document.getElementById('ai-key-input');
+  var keySave  = document.getElementById('ai-key-save-btn');
+  var keyBtn   = document.getElementById('ai-key-btn');
+
+  if (!panel || !openBtn) return;
+
+  // ── Key helpers: fall back to hardcoded default ──
+  function getKey(){
+    return localStorage.getItem(STORAGE_KEY) || DEFAULT_GROQ_KEY;
+  }
+  function saveKey(k){
+    if (k) localStorage.setItem(STORAGE_KEY, k);
+    else   localStorage.removeItem(STORAGE_KEY);
+  }
+
+  // Pre-fill key bar with default and hide it
+  (function initKeyBar(){
+    keyInput.value     = getKey();
+    keyBar.style.display = 'none';
+  })();
+
+  keySave.addEventListener('click', function(){
+    var v = keyInput.value.trim();
+    saveKey(v);
+    keyBar.style.display = 'none';
+    showToast(v ? 'Groq key saved' : 'Using default key');
+  });
+  keyBtn.addEventListener('click', function(e){
+    e.stopPropagation();
+    keyBar.style.display = (keyBar.style.display === 'none') ? 'block' : 'none';
+  });
+
+  // ── Panel open / close ──
+  function openPanel(){
+    aiOpen = true;
+    panel.style.display = 'flex';
+    overlay.style.display = 'block';
+    requestAnimationFrame(function(){ panel.classList.add('open'); });
+    setTimeout(function(){ inputEl.focus(); }, 350);
+  }
+  function closePanel(){
+    aiOpen = false;
+    panel.classList.remove('open');
+    overlay.style.display = 'none';
+    setTimeout(function(){ panel.style.display = 'none'; }, 320);
+  }
+
+  openBtn.addEventListener('click', function(e){
+    e.stopPropagation();
+    if (aiOpen) closePanel(); else openPanel();
+  });
+  closeBtn.addEventListener('click', closePanel);
+  overlay.addEventListener('click', closePanel);
+
+  clearBtn.addEventListener('click', function(){
+    aiHistory = [];
+    while (messages.children.length > 1) messages.removeChild(messages.lastChild);
+    showToast('GIGO PAMBA chat cleared');
+  });
+
+  // ── Quick prompts ──
+  document.querySelectorAll('.ai-quick-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      inputEl.value = btn.dataset.q;
+      sendMessage();
+    });
+  });
+
+  inputEl.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); }
+  });
+  sendBtn.addEventListener('click', sendMessage);
+
+  inputEl.addEventListener('input', function(){
+    inputEl.style.height = 'auto';
+    inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+  });
+
+  document.addEventListener('keydown', function(e){
+    if ((e.ctrlKey || e.metaKey) && e.key === '/'){
+      e.preventDefault();
+      if (aiOpen) closePanel(); else openPanel();
+    }
+  });
+
+  // ── Markdown renderer ──
+  function escHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function renderMarkdown(txt){
+    var s = escHtml(txt);
+    s = s.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+    s = s.replace(/\x60([^\x60]+)\x60/g, '<code>$1</code>');
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    s = s.replace(/^### (.+)$/gm, '<strong style="color:var(--purple-bright)">$1</strong>');
+    s = s.replace(/^## (.+)$/gm,  '<strong style="color:var(--purple-bright)">$1</strong>');
+    s = s.replace(/^[-*] (.+)$/gm, '\u2022 $1');
+    s = s.split('\n').join('<br>');
+    return s;
+  }
+
+  // ── Bat SVG avatar for assistant messages ──
+  function makeBatAvatar(){
+    var d = document.createElement('div');
+    d.className = 'ai-msg-avatar';
+    d.style.cssText = 'background:linear-gradient(135deg,#5500AA,#9F00FF);border-color:rgba(159,0,255,.5);overflow:hidden';
+    d.innerHTML = '<svg width="20" height="17" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">'
+      + '<g style="transform-origin:50px 44px;animation:wingFlapL .55s ease-in-out infinite alternate"><path d="M50 42C42 38,28 28,8 22C12 30,16 32,18 42C16 40,22 52,24 56C30 50,36 46,50 48Z" fill="#CC44FF" opacity=".95"/></g>'
+      + '<g style="transform-origin:50px 44px;animation:wingFlapR .55s ease-in-out infinite alternate"><path d="M50 42C58 38,72 28,92 22C88 30,84 32,82 42C84 40,78 52,76 56C70 50,64 46,50 48Z" fill="#CC44FF" opacity=".95"/></g>'
+      + '<ellipse cx="50" cy="44" rx="9" ry="10" fill="#8800DD"/>'
+      + '<circle cx="50" cy="33" r="7.5" fill="#8800DD"/>'
+      + '<polygon points="44,28 41,18 47,25" fill="#BF40FF"/><polygon points="56,28 59,18 53,25" fill="#BF40FF"/>'
+      + '<circle cx="47" cy="32" r="2.2" fill="#FF00FF"/><circle cx="53" cy="32" r="2.2" fill="#FF00FF"/>'
+      + '<circle cx="47" cy="32" r=".9" fill="#fff"/><circle cx="53" cy="32" r=".9" fill="#fff"/>'
+      + '</svg>';
+    return d;
+  }
+
+  function addMessage(role, text, isError){
+    var wrap = document.createElement('div');
+    wrap.className = 'ai-msg ' + (role === 'user' ? 'ai-msg-user' : 'ai-msg-bot');
+    var avatar;
+    if (role === 'user'){
+      avatar = document.createElement('div');
+      avatar.className  = 'ai-msg-avatar';
+      avatar.textContent = '\uD83C\uDFA4';
+    } else {
+      avatar = makeBatAvatar();
+    }
+    var bubble = document.createElement('div');
+    bubble.className = 'ai-msg-bubble' + (isError ? ' ai-error-bubble' : '');
+    bubble.innerHTML  = renderMarkdown(text);
+    wrap.appendChild(avatar);
+    wrap.appendChild(bubble);
+    messages.appendChild(wrap);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  // ── Read current beat ──
+  function getBeatContext(){
+    try {
+      var tl = (typeof TRACKS !== 'undefined')
+        ? TRACKS.map(function(t){ return t.label; }).join(', ') : 'unknown';
+      var b = (typeof bpm   !== 'undefined') ? bpm   : 120;
+      var st= (typeof STEPS !== 'undefined') ? STEPS : 16;
+      var el= document.querySelector('.pbtn[style*="rgba(159,0,255"]');
+      var p = el ? el.textContent.trim() : 'none';
+      return '[Beat: BPM=' + b + ' Steps=' + st + ' Tracks: ' + tl + ' Preset: ' + p + ']';
+    } catch(e){ return ''; }
+  }
+
+  // ── System prompt ──
+  var SP = [
+    'You are GIGO PAMBA, an elite music production AI assistant built into the GIGO beat maker.',
+    'You are powered by Groq and speak like a real music producer — direct, knowledgeable, energetic.',
+    '',
+    'Your expertise covers:',
+    '- All genres: hip-hop, trap, drill, R&B, Afrobeats, Afropop, Amapiano, lo-fi, house, dancehall, reggaeton',
+    '- Drum programming: kick patterns, snare placement, hi-hat rolls, polyrhythm, swing, ghost notes',
+    '- 808 bass: design, pitch, decay, saturation, sidechain compression',
+    '- Melody: hooks, chord progressions, scales, key signatures, music theory',
+    '- Mixing: EQ, compression, reverb, delay, stereo width, loudness',
+    '- Sound design: oscillators, filters, envelopes, LFOs, synthesis',
+    '- The GIGO sequencer: tracks, step buttons, BPM, presets, clip blocks, patterns',
+    '',
+    'Response rules:',
+    '- For drum patterns: give exact step numbers like "kick on 1, 5, 9, 13 (out of 16)"',
+    '- For chords: give name AND notes e.g. "Fm7 = F Ab C Eb"',
+    '- For BPM: give a specific range e.g. "90-100 BPM"',
+    '- Be concise and specific. Skip filler phrases.',
+    '- When beat context is shared, tailor advice to what they actually have loaded.',
+    '- Occasionally reference GIGO features (presets, sequencer, clip tracks) in advice.'
+  ].join('\n');
+
+  // ── Send message ──
+  async function sendMessage(){
+    var text = inputEl.value.trim();
+    if (!text) return;
+    inputEl.value = '';
+    inputEl.style.height = '';
+    addMessage('user', text);
+    aiHistory.push({ role: 'user', content: text + ' ' + getBeatContext() });
+
+    typing.style.display  = 'block';
+    messages.scrollTop    = messages.scrollHeight;
+    statusLbl.textContent = 'GIGO PAMBA is thinking\u2026';
+    sendBtn.disabled = true;
+    inputEl.disabled = true;
+
+    try {
+      var reply = await callGroq(aiHistory);
+      typing.style.display  = 'none';
+      addMessage('assistant', reply);
+      aiHistory.push({ role: 'assistant', content: reply });
+      if (aiHistory.length > 40) aiHistory = aiHistory.slice(-40);
+      statusLbl.textContent = 'Ready to help';
+    } catch(err){
+      typing.style.display = 'none';
+      var errMsg = err.message || 'Something went wrong.';
+      addMessage('assistant', '\u26a0\ufe0f ' + errMsg + '\n\nCheck your Groq key in \uD83D\uDD11 KEY or try again.', true);
+      statusLbl.textContent = 'Error \u2014 try again';
+      console.error('GIGO PAMBA error:', err);
+    } finally {
+      sendBtn.disabled = false;
+      inputEl.disabled = false;
+      inputEl.focus();
+    }
+  }
+
+  // ── Groq API (primary) ──
+  async function callGroq(history){
+    var key  = getKey();
+    var msgs = [{ role: 'system', content: SP }].concat(history.slice(-16));
+    var res  = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method : 'POST',
+      headers: {
+        'Content-Type' : 'application/json',
+        'Authorization': 'Bearer ' + key
+      },
+      body: JSON.stringify({
+        model      : GROQ_MODEL,
+        messages   : msgs,
+        max_tokens : 750,
+        temperature: 0.72,
+        stream     : false
+      })
+    });
+    if (!res.ok){
+      var errData = await res.json().catch(function(){ return {}; });
+      var msg = (errData.error && errData.error.message) || ('Groq API error ' + res.status);
+      throw new Error(msg);
+    }
+    var data = await res.json();
+    var content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+    if (!content) throw new Error('Empty response from Groq');
+    return content;
+  }
+
+  statusLbl.textContent = 'Powered by Groq \u26a1';
+  console.log('GIGO PAMBA ready. Ctrl+/ to toggle.');
 })();
 
 </script>
